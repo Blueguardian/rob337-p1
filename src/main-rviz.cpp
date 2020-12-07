@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 
   while (ros::ok()) //while(!= ros::Shutdown(); or the user has Ctrl+C out of the program.)
   {
-
+    ros::spinOnce();
   }
   return 0; //Program run succesfully.
 }
