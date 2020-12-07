@@ -33,10 +33,10 @@ int main(int argc, char **argv)
   ros::Publisher base_state_pub = nh2.advertise<std_msgs::Bool>("base_state", 5); //Creating a publisher for publishing the state of the MoveBaseClient
 
   MoveBaseClient ac("move_base", true); //Defining a client to send goals to the move_base server.
-  //while (!ac.waitForServer(ros::Duration(5.0)))
-  //{                                                                 //wait for the action server to come up
-  //  ROS_INFO("Waiting for the move_base action server to come up"); //Printing a fitting messege.
-  //}
+  while (!ac.waitForServer(ros::Duration(5.0)))
+  {                                                                 //wait for the action server to come up
+    ROS_INFO("Waiting for the move_base action server to come up"); //Printing a fitting messege.
+  }
 
   while (ros::ok()) //while(!= ros::Shutdown(); or the user has Ctrl+C out of the program.)
   {
@@ -199,6 +199,74 @@ move_base_msgs::MoveBaseGoal get_dif2Dgoal(move_base_msgs::MoveBaseGoal goal)
   return goal_target;
 }
 
+void exhib_scan(move_base_msgs::MoveBaseGoal goal)
+{
+  //We save variables for the current exhibit position
+  move_base_msgs::MoveBaseGoal tmp_location;
+  tmp_location.target_pose.pose.position.x = goal.target_pose.pose.position.x;
+  tmp_location.target_pose.pose.position.y = goal.target_pose.pose.position.y;
+  tmp_location.target_pose.pose.orientation.z = goal.target_pose.pose.position.z;
+
+  //We define how many meters the robot must move each step while re-locating
+  double step = 0.3;
+  double prep_line_gradient = atan(-1 / (tan(tmp_location.target_pose.pose.orientation.z))); //Calculation of perpendicular angle, used in increment
+  double increment_x = 0;
+  double increment_y = 0;
+  //We now do calculations which we assign to the datatype goal (x,y and z) in order for the robot to move right/left at the exhibit and take an image.
+
+  if (((goal.target_pose.pose.position.z < 0.01) && (goal.target_pose.pose.position.z > (2 * M_PI - 0.01))) || ((goal.target_pose.pose.position.z < (M_PI + 0.01)) && (goal.target_pose.pose.position.z > (M_PI - 0.01))))
+  //The robot has its direction facing 0 or 180 degrees, and only its increments are defines as following:
+  {
+    increment_x = step;
+    increment_y = 0;
+  }
+
+  else if (((goal.target_pose.pose.position.z < (M_PI_2 + 0.01)) && (goal.target_pose.pose.position.z > (M_PI_2 - 0.01))) || ((goal.target_pose.pose.position.z < (((3 / 4) * 2 * M_PI) + 0.01)) && (goal.target_pose.pose.position.z > (((3 / 4) * 2 * M_PI) - 0.01)))) //If cos(angle) = apprx. 1 //6.28 = ca. 2*Pi
+  {                                                                                                                                                                                                                                                                      //The robot has its direction 90 or 270 degrees
+    increment_x = 0;
+    increment_y = step;
+  }
+  else //The robot is facing somewhere between - calculations for steps required!
+  {
+    increment_x = step * cos(prep_line_gradient);
+    increment_y = step * sin(prep_line_gradient);
+  }
+
+    
+      if (((prep_line_gradient > 0) && (prep_line_gradient < M_PI_2)) || ((prep_line_gradient > M_PI) && (prep_line_gradient < (2 * M_PI * (3 / 4)))))
+      {
+        for (int i = 0; i < 3; i++){ //We make the robot move 3 steps to the right, in which it faces the exhibits
+        goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
+        goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
+        send_goal(goal);
+        }
+        goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x;  //Goes back to original position 
+        goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+        for (int i = 0; i < 3; i++){ //We make the robot move 3 steps to the right, in which it faces the exhibits
+        goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
+        goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
+        send_goal(goal);
+        }
+      }
+      else
+      {
+        for (int i = 0; i < 3; i++){
+        goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
+        goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
+        send_goal(goal);
+        }
+        goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x;  //Goes back to original position 
+        goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+        for (int i = 0; i < 3; i++){
+        goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
+        goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
+        send_goal(goal);
+        }
+      }
+      goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x;  //Goes back to original position 
+      goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+      send_goal(goal);
+  }
 
 
 
