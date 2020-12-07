@@ -232,41 +232,41 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal)
     increment_y = step * sin(prep_line_gradient);
   }
 
-    
-      if (((prep_line_gradient > 0) && (prep_line_gradient < M_PI_2)) || ((prep_line_gradient > M_PI) && (prep_line_gradient < (2 * M_PI * (3 / 4)))))
-      {
-        for (int i = 0; i < 3; i++){ //We make the robot move 3 steps to the right, in which it faces the exhibits
-        goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
-        goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
-        send_goal(goal);
-        }
-        goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x;  //Goes back to original position 
-        goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
-        for (int i = 0; i < 3; i++){ //We make the robot move 3 steps to the right, in which it faces the exhibits
-        goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
-        goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
-        send_goal(goal);
-        }
-      }
-      else
-      {
-        for (int i = 0; i < 3; i++){
-        goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
-        goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
-        send_goal(goal);
-        }
-        goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x;  //Goes back to original position 
-        goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
-        for (int i = 0; i < 3; i++){
-        goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
-        goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
-        send_goal(goal);
-        }
-      }
-      goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x;  //Goes back to original position 
-      goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+  if (((prep_line_gradient > 0) && (prep_line_gradient < M_PI_2)) || ((prep_line_gradient > M_PI) && (prep_line_gradient < (2 * M_PI * (3 / 4)))))
+  {
+    for (int i = 0; i < 3; i++)
+    { //We make the robot move 3 steps to the right, in which it faces the exhibits
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
       send_goal(goal);
+    }
+    goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
+    goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+    for (int i = 0; i < 3; i++)
+    { //We make the robot move 3 steps to the right, in which it faces the exhibits
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
+      send_goal(goal);
+    }
   }
-
-
-
+  else
+  {
+    for (int i = 0; i < 3; i++)
+    {
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
+      send_goal(goal);
+    }
+    goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
+    goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+    for (int i = 0; i < 3; i++)
+    {
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
+      send_goal(goal);
+    }
+  }
+  goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
+  goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+  send_goal(goal);
+}
