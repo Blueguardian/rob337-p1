@@ -22,14 +22,14 @@ find_package(catkin REQUIRED COMPONENTS
  move_base_msgs
  actionlib
  image_transport
- pcl_ros
+ #pcl_ros
  sensor_msgs
  std_srvs
  cv_bridge
  visualization_msgs
  )
 
- find_package(OpenCV 3 REQUIRED)
+ #find_package(OpenCV 3 REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -115,7 +115,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
   INCLUDE_DIRS
-  ${OpenCV_INCLUDE_DIRS}
+  #${OpenCV_INCLUDE_DIRS}
 #  LIBRARIES turtlesim_games
   CATKIN_DEPENDS message_runtime
 #  DEPENDS system_lib
@@ -171,10 +171,10 @@ set_target_properties(${PROJECT_NAME}_main_rviz PROPERTIES OUTPUT_NAME main PREF
 
 ##Motion planning executable
 target_link_libraries(${PROJECT_NAME}_exhibit_recorder_rviz
-${catkin_LIBRARIES} ${OpenCV_LIBS}
+${catkin_LIBRARIES} #${OpenCV_LIBS}
 )
 target_link_libraries(${PROJECT_NAME}_main_rviz
-${catkin_LIBRARIES} ${OpenCV_LIBS}
+${catkin_LIBRARIES}
 )
 #target_link_libraries(${PROJECT_NAME}_tf_output
 #${catkin_LIBRARIES}
