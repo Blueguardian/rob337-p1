@@ -10,11 +10,12 @@
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <tf2/LinearMath/Quaternion.h>
+#include "tf/transform_datatypes.h"
 
 ros::NodeHandle *ptrnh;
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
-void userInterface_cb(const geometry_msgs::PointStamped::ConstPtr &msg);                                                        //Prints messeges containing the received coordinates                                                             //Prints messeges containing the received coordinates
+void userInterface_cb(const move_base_msgs::MoveBaseGoal::ConstPtr &msg);                                                        //Prints messeges containing the received coordinates                                                             //Prints messeges containing the received coordinates
 void goal_reached_cb(const actionlib::SimpleClientGoalState &state, const move_base_msgs::MoveBaseResult::ConstPtr &result); //Goal has been reached                                                             //Odometry callback function
 void send_goal(move_base_msgs::MoveBaseGoal goal_point);                                                                //Send goal to move_base server
 void send_marker(move_base_msgs::MoveBaseGoal goal); 
@@ -27,7 +28,7 @@ int main(int argc, char **argv)
   ros::NodeHandle nh2;
   ros::Rate loop(1);
   ptrnh = &nh2;
-  ros::Subscriber user_input = nh2.subscribe("point_clicked", 1, userInterface_cb);    // Subscribes to the user_input topic and when it receives a messege it runs the callback function
+  ros::Subscriber user_input = nh2.subscribe("new_exhibit", 1, userInterface_cb);    // Subscribes to the user_input topic and when it receives a messege it runs the callback function
   ros::Publisher base_state_pub = nh2.advertise<std_msgs::Bool>("base_state", 5); //Creating a publisher for publishing the state of the MoveBaseClient
 
   MoveBaseClient ac("move_base", true); //Defining a client to send goals to the move_base server.
@@ -87,29 +88,37 @@ void _goal_reached_cb(const actionlib::SimpleClientGoalState &state, const move_
   }
 }
 
-void userInterface_cb(const geometry_msgs::PointStamped::ConstPtr &msg)
+void userInterface_cb(const move_base_msgs::MoveBaseGoal::ConstPtr &msg)
 {
-  ROS_INFO("Stored coordinates: [x: %f, y: %f, z: %f]", msg->point.x, msg->point.x, msg->point.z); //For testing and errorhandling
+  ROS_INFO("Stored coordinates: [x: %f, y: %f, z: %f]", msg->target_pose.pose.position.x, msg->target_pose.pose.position.x, msg->target_pose.pose.orientation.z); //For testing and errorhandling
   move_base_msgs::MoveBaseGoal goal_target;
   tf2::Quaternion rotation;
 
   ROS_INFO("Calculating goal position.."); //Testing purposes
 
-  goal_target.target_pose.pose.position.x = msg->point.x;
-  goal_target.target_pose.pose.position.y = msg->point.y;
-  goal_target.target_pose.pose.orientation.z = msg->point.z;
+  goal_target.target_pose.pose.position.x = msg->target_pose.pose.position.x;
+  goal_target.target_pose.pose.position.y = msg->target_pose.pose.position.y;
+  goal_target.target_pose.pose.orientation.z = msg->target_pose.pose.position.z;
+
+  rotation.setX(msg->target_pose.pose.orientation.x);
+  rotation.setY(msg->target_pose.pose.orientation.y);
+  rotation.setZ(msg->target_pose.pose.orientation.z);
+  rotation.setW(msg->target_pose.pose.orientation.w);
+
+  double anglez = rotation.getAngle();
+  anglez = rob_facing_angle(anglez);
+  goal_target.target_pose.pose.orientation.z = anglez;
 
   goal_target = get_dif2Dgoal(goal_target);
 
-  rotation.setRPY(0, 0, rob_facing_angle(msg->point.z));
+  rotation.setRPY(0,0,goal_target.target_pose.pose.orientation.z);
   rotation.normalize();
 
-  goal_target.target_pose.pose.orientation.x = rotation.x();
-  goal_target.target_pose.pose.orientation.y = rotation.y();
-  goal_target.target_pose.pose.orientation.z = rotation.z();
-  goal_target.target_pose.pose.orientation.w = rotation.w();
-
-  goal_target.target_pose.header.frame_id = msg->header.frame_id;
+  goal_target.target_pose.pose.orientation.z = rotation.getZ();
+  goal_target.target_pose.pose.orientation.w = rotation.getW();
+  goal_target.target_pose.pose.orientation.x = rotation.getX();
+  goal_target.target_pose.pose.orientation.y = rotation.getY();
+  goal_target.target_pose.header.frame_id = msg->target_pose.header.frame_id;
   send_goal(goal_target);
 }
 
