@@ -11,16 +11,21 @@
 #include <visualization_msgs/MarkerArray.h>
 #include <tf2/LinearMath/Quaternion.h>
 #include "tf/transform_datatypes.h"
+#include <vector>
 
 ros::NodeHandle *ptrnh;
+std::vector<move_base_msgs::MoveBaseGoal> targets;
+visualization_msgs::MarkerArray markers;
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg);                                                        //Prints messeges containing the received coordinates                                                             //Prints messeges containing the received coordinates
 void goal_reached_cb(const actionlib::SimpleClientGoalState &state, const move_base_msgs::MoveBaseResult::ConstPtr &result); //Goal has been reached                                                             //Odometry callback function
-void send_goal(move_base_msgs::MoveBaseGoal goal_point);                                                                //Send goal to move_base server
+void send_goal(move_base_msgs::MoveBaseGoal goal_point, int i);                                                                //Send goal to move_base server
 void send_marker(move_base_msgs::MoveBaseGoal goal); 
 double rob_facing_angle(double angle);
-move_base_msgs::MoveBaseGoal get_dif2Dgoal(move_base_msgs::MoveBaseGoal goal);                                                                
+move_base_msgs::MoveBaseGoal get_dif2Dgoal(move_base_msgs::MoveBaseGoal goal);
+void sortCoord(std::vector<move_base_msgs::MoveBaseGoal> target, int startpos, int itera, double refx, double refy);
+double euclidianDist(double x1, double y1, double refx, double refy);                                                                
 
 int main(int argc, char **argv)
 {
@@ -32,21 +37,41 @@ int main(int argc, char **argv)
   ros::Publisher base_state_pub = nh2.advertise<std_msgs::Bool>("base_state", 5); //Creating a publisher for publishing the state of the MoveBaseClient
 
   MoveBaseClient ac("move_base", true); //Defining a client to send goals to the move_base server.
-  //while (!ac.waitForServer(ros::Duration(5.0)))
-  //{                                                                 //wait for the action server to come up
-  //  ROS_INFO("Waiting for the move_base action server to come up"); //Printing a fitting messege.
-  //}
+  while (!ac.waitForServer(ros::Duration(5.0)))
+  {                                                                 //wait for the action server to come up
+    ROS_INFO("Waiting for the move_base action server to come up"); //Printing a fitting messege.
+  }
 
   while (ros::ok()) //while(!= ros::Shutdown(); or the user has Ctrl+C out of the program.)
   {
+    int i = 0;
+    int start = getchar();
+    while(start == 't' && i < targets.size())
+    {
+      if(i == 0)
+      {
+        sortCoord(targets, i, targets.size(), 0, 0);
+        send_goal(targets[i], i);
+      }
+      else
+      {
+        sortCoord(targets, i, targets.size(), targets[i-1].target_pose.pose.position.x, targets[i-1].target_pose.pose.position.y);
+        send_goal(targets[i], i);
+      }
+      i++;
+    }
     ros::spinOnce();
+    if(start == 'q')
+    {
+      ros::shutdown();
+    }
   }
   return 0; //Program run succesfully.
 }
 
 void _goal_reached_cb(const actionlib::SimpleClientGoalState &state, const move_base_msgs::MoveBaseResult::ConstPtr &result)
 {
-  if (state == state.SUCCEEDED)
+  if (state.toString() == "SUCCEEDED")
   {
     ROS_INFO("The goal has succesfully been reached!");
     ros::Publisher take_picture = ptrnh->advertise<std_msgs::Bool>("take_picture", 1);
@@ -57,30 +82,6 @@ void _goal_reached_cb(const actionlib::SimpleClientGoalState &state, const move_
     sleep.sleep();
     msg.data = false;
     take_picture.publish(msg);
-  }
-  else if (state == state.ACTIVE)
-  {
-    ROS_INFO("The robot is currently en route!");
-  }
-  else if (state == state.ABORTED)
-  {
-    ROS_INFO("The goal has been aborted!");
-  }
-  else if (state == state.LOST)
-  {
-    ROS_INFO("The goal has been lost!");
-  }
-  else if (state == state.PENDING)
-  {
-    ROS_INFO("The goal is currently pending!");
-  }
-  else if (state == state.REJECTED)
-  {
-    ROS_INFO("The goal has been rejected!");
-  }
-  else if (state == state.RECALLED)
-  {
-    ROS_INFO("The goal has been recalled!");
   }
   else
   {
@@ -94,7 +95,7 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
   move_base_msgs::MoveBaseGoal goal_target;
   tf2::Quaternion rotation;
 
-  ROS_INFO("Calculating goal position.."); //Testing purposes
+  ROS_INFO("Calculating goal position..."); //Testing purposes
 
   goal_target.target_pose.pose.position.x = msg->pose.position.x;
   goal_target.target_pose.pose.position.y = msg->pose.position.y;
@@ -105,30 +106,38 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
   rotation.setZ(msg->pose.orientation.z);
   rotation.setW(msg->pose.orientation.w);
 
+  ROS_INFO("Inverting rotation..");
+
   double anglez = rotation.getAngle();
   anglez = rob_facing_angle(anglez);
   goal_target.target_pose.pose.orientation.z = anglez;
 
   goal_target = get_dif2Dgoal(goal_target);
 
-  rotation.setRPY(0,0,goal_target.target_pose.pose.orientation.z);
-  rotation.normalize();
+  rotation.inverse();
 
   goal_target.target_pose.pose.orientation.z = rotation.getZ();
   goal_target.target_pose.pose.orientation.w = rotation.getW();
   goal_target.target_pose.pose.orientation.x = rotation.getX();
   goal_target.target_pose.pose.orientation.y = rotation.getY();
   goal_target.target_pose.header.frame_id = msg->header.frame_id;
-  send_goal(goal_target);
+  // send_goal(goal_target);
+  send_marker(goal_target);
+
+  ROS_INFO("Storing target..");
+  targets.push_back(goal_target);
 }
 
-void send_goal(move_base_msgs::MoveBaseGoal goal_point)
+void send_goal(move_base_msgs::MoveBaseGoal goal_point, int i)
 {
   MoveBaseClient ac("move_base", true);
   ac.sendGoal(goal_point, boost::bind(&_goal_reached_cb, _1, _2));
-  ROS_INFO("Sending goal..");
-  send_marker(goal_point);
-
+  ROS_INFO("Sending goal and markers..");
+//  send_marker(goal_point);
+  ros::Publisher marker_pub = ptrnh->advertise<visualization_msgs::MarkerArray>("visualization_marker", 1);
+  marker_pub.publish(markers);
+  markers.markers.erase(markers.markers.begin()+i);
+  markers.markers.shrink_to_fit();
   ac.waitForResult();
 }
 
@@ -154,10 +163,9 @@ double rob_facing_angle(double angle)
 
 void send_marker(move_base_msgs::MoveBaseGoal goal)
 {
-  ros::Publisher marker_pub;
-  marker_pub = ptrnh->advertise<visualization_msgs::MarkerArray>("busroute_markers", 1);
+//  ros::Publisher marker_pub;
+//  marker_pub = ptrnh->advertise<visualization_msgs::MarkerArray>("exhibit_markers", 1);
   visualization_msgs::Marker marker;
-  visualization_msgs::MarkerArray marker_array;
   marker.header.stamp = ros::Time::now();
   marker.ns = "target_point";
   marker.type = visualization_msgs::Marker::ARROW;
@@ -178,9 +186,9 @@ void send_marker(move_base_msgs::MoveBaseGoal goal)
   marker.id = 1;
   marker.pose.position = goal.target_pose.pose.position;
   marker.pose.position.z += marker.scale.x;
-  marker_array.markers.push_back(marker);
-  ROS_INFO("Sending marker"); //For testing purposes.
-  marker_pub.publish(marker_array);
+  markers.markers.push_back(marker);
+  ROS_INFO("Storing marker for publishing"); //For testing purposes.
+
 }
 
 move_base_msgs::MoveBaseGoal get_dif2Dgoal(move_base_msgs::MoveBaseGoal goal)
@@ -194,4 +202,35 @@ move_base_msgs::MoveBaseGoal get_dif2Dgoal(move_base_msgs::MoveBaseGoal goal)
     goal_target.target_pose.pose.position.y = goal.target_pose.pose.position.y-dif_y;
 
     return goal_target;
+}
+
+void sortCoord(std::vector<move_base_msgs::MoveBaseGoal> target, int startpos, int itera, double refx, double refy)
+{
+    //The function takes an array, a starting position, a number of iterations, since it ensures that the array does not get too big,
+    //and takes a set of coordinates for the point of reference, It then compares the array's coordinatesets by calling the euclidianDist() function
+    //to compare them by their euclidian distance. It then switches the sets if the former set is smaller than the latter.
+
+    //beginning of function
+
+    for(int i = startpos; i<itera; i++) //iterator for the first coordinateset
+    {
+        if((euclidianDist(target[startpos].target_pose.pose.position.x, target[startpos].target_pose.pose.position.y, refx, refy) > (euclidianDist(target[i].target_pose.pose.position.x, target[i].target_pose.pose.position.y, refx, refy))))
+        {
+                //switches the places of the coordinateset if it's smaller.
+                std::swap(target[startpos], target[i]);
+        }
+    }
+} 
+
+double euclidianDist(double x1, double y1, double refx, double refy)
+{
+    //This function takes in two coordinates of type double (x1 and y1) and calculates the distance from a point of
+    //reference (refx and refy) and returns the euclidian distance between these.
+
+    //beginning of function
+
+    double distx = pow(x1-refx, 2); //Reference distance calculation
+    double disty = pow(y1-refy, 2); //Input distance calculation
+    double dist = sqrt(distx+disty); //calculation of distance between reference point and input point
+    return dist;
 }
