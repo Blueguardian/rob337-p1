@@ -7,6 +7,7 @@
 #include <actionlib/client/simple_action_client.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float32MultiArray.h>
+#include <std_msgs/Char.h>
 #include <visualization_msgs/Marker.h>
 #include <visualization_msgs/MarkerArray.h>
 #include <tf2/LinearMath/Quaternion.h>
@@ -17,6 +18,7 @@ ros::NodeHandle *ptrnh;
 std::vector<move_base_msgs::MoveBaseGoal> targets;
 std::vector<double> angles_recieved;
 visualization_msgs::MarkerArray markers;
+int start = 0;
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg);                                                      //Prints messeges containing the received coordinates                                                             //Prints messeges containing the received coordinates
@@ -28,6 +30,7 @@ move_base_msgs::MoveBaseGoal get_dif2Dgoal(move_base_msgs::MoveBaseGoal goal);
 void sortCoord(std::vector<move_base_msgs::MoveBaseGoal> target, int startpos, int itera, double refx, double refy);
 double euclidianDist(double x1, double y1, double refx, double refy);
 void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter);
+void user_input_cb(const std_msgs::Char::ConstPtr &msg);
 
 int main(int argc, char **argv)
 {
@@ -37,17 +40,17 @@ int main(int argc, char **argv)
   ptrnh = &nh2;
   ros::Subscriber user_input = nh2.subscribe("new_exhibit", 1, userInterface_cb); // Subscribes to the user_input topic and when it receives a messege it runs the callback function
   ros::Publisher base_state_pub = nh2.advertise<std_msgs::Bool>("base_state", 5); //Creating a publisher for publishing the state of the MoveBaseClient
+  ros::Subscriber input = nh2.subscribe("user_input", 1, user_input_cb);
 
   MoveBaseClient ac("move_base", true); //Defining a client to send goals to the move_base server.
   while (!ac.waitForServer(ros::Duration(5.0)))
   {                                                                 //wait for the action server to come up
     ROS_INFO("Waiting for the move_base action server to come up"); //Printing a fitting messege.
   }
-
+  
   while (ros::ok()) //while(!= ros::Shutdown(); or the user has Ctrl+C out of the program.)
   {
     int i = 0;
-    int start = getchar();
     while (start == 't' && i < targets.size())
     {
       int end = getchar();
@@ -74,7 +77,7 @@ int main(int argc, char **argv)
       }
       i++;
     }
-    ros::spinOnce();
+    ros::spin();
     if (start == 'q')
     {
       ROS_INFO("Shutting down..");
@@ -367,4 +370,9 @@ double euclidianDist(double x1, double y1, double refx, double refy)
   double disty = pow(y1 - refy, 2);  //Input distance calculation
   double dist = sqrt(distx + disty); //calculation of distance between reference point and input point
   return dist;
+}
+
+void user_input_cb(const std_msgs::Char::ConstPtr &msg)
+{
+  start = msg->data;
 }

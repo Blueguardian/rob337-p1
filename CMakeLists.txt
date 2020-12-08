@@ -145,6 +145,7 @@ ${catkin_INCLUDE_DIRS}
 
 add_executable(${PROJECT_NAME}_exhibit_recorder_rviz src/exhibit-recorder-rviz.cpp)
 add_executable(${PROJECT_NAME}_main_rviz src/main-rviz.cpp)
+add_executable(${PROJECT_NAME}_user_input src/input.cpp)
 
 
 ## Rename C++ executable without prefix
@@ -154,6 +155,7 @@ add_executable(${PROJECT_NAME}_main_rviz src/main-rviz.cpp)
 
 set_target_properties(${PROJECT_NAME}_exhibit_recorder_rviz PROPERTIES OUTPUT_NAME recorder PREFIX "")
 set_target_properties(${PROJECT_NAME}_main_rviz PROPERTIES OUTPUT_NAME main PREFIX "")
+set_target_properties(${PROJECT_NAME}_user_input PROPERTIES OUTPUT_NAME user_input PREFIX "")
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
@@ -168,6 +170,9 @@ target_link_libraries(${PROJECT_NAME}_exhibit_recorder_rviz
 ${catkin_LIBRARIES}
 )
 target_link_libraries(${PROJECT_NAME}_main_rviz
+${catkin_LIBRARIES}
+)
+target_link_libraries(${PROJECT_NAME}_user_input
 ${catkin_LIBRARIES}
 )
 #target_link_libraries(${PROJECT_NAME}_tf_output
@@ -195,6 +200,7 @@ ${catkin_LIBRARIES}
 install(TARGETS
  ${PROJECT_NAME}_exhibit_recorder_rviz
  ${PROJECT_NAME}_main_rviz
+ ${PROJECT_NAME}_user_input
    RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
  )
 
