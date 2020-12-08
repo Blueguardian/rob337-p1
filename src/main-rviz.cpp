@@ -89,8 +89,8 @@ int main(int argc, char **argv)
 
 void _goal_reached_cb(const actionlib::SimpleClientGoalState &state, const move_base_msgs::MoveBaseResult::ConstPtr &result)
 {
-  if (state.toString() == "SUCCEEDED")
-  {
+ // if (state.toString() == "SUCCEEDED")
+  //{
     ROS_INFO("The goal has succesfully been reached!");
     ros::Publisher take_picture = ptrnh->advertise<std_msgs::Bool>("take_picture", 1);
     std_msgs::Bool msg;
@@ -100,11 +100,11 @@ void _goal_reached_cb(const actionlib::SimpleClientGoalState &state, const move_
     sleep.sleep();
     msg.data = false;
     take_picture.publish(msg);
-  }
-  else
-  {
-    ROS_INFO("Something went wrong!");
-  }
+ // }
+  //else
+  //{
+  //  ROS_INFO("Something went wrong!");
+  //}
 }
 
 void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
