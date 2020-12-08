@@ -53,16 +53,23 @@ int main(int argc, char **argv)
       int end = getchar();
       if(i == 0)
       {
+        ROS_INFO("Sorting targets for closest target...");
         sortCoord(targets, i, targets.size(), 0, 0);
+        ROS_INFO("Sending 1. goal");
         send_goal(targets[i], i);
       }
       else
       {
+        ROS_INFO("Sorting targets for closest target...");
         sortCoord(targets, i, targets.size(), targets[i-1].target_pose.pose.position.x, targets[i-1].target_pose.pose.position.y);
+        ROS_INFO("Sending %d. goal", i+1);
         send_goal(targets[i], i);
       }
       if(end == 'q')
       {
+        ROS_INFO("Cancelling goals..");
+        ac.cancelAllGoals();
+        ROS_INFO("Shutting down..");
         ros::shutdown();
       }
       i++;
@@ -70,6 +77,7 @@ int main(int argc, char **argv)
     ros::spinOnce();
     if(start == 'q')
     {
+      ROS_INFO("Shutting down..");
       ros::shutdown();
     }
   }
@@ -143,6 +151,7 @@ void send_goal(move_base_msgs::MoveBaseGoal goal_point, int i)
   marker_pub.publish(markers);
   markers.markers.erase(markers.markers.begin()+i);
   ac.waitForResult();
+  ROS_INFO("Performing scan of exhibition...");
   exhib_scan(goal_point);
 }
 
