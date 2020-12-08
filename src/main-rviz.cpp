@@ -213,26 +213,26 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal)
   double increment_x = 0;
   double increment_y = 0;
 
-  if (((goal.target_pose.pose.position.z > 0) && (goal.target_pose.pose.position.z < M_PI_2))) //Angle in fist quadrant
+  if (((fabs(goal.target_pose.pose.position.z) > 0) && (fabs(goal.target_pose.pose.position.z) < M_PI_2))) //Angle in fist quadrant
   {                                                                                            //This means the angle can be calculated as
     perp_line_angle = fabs(atan(-1 / (tan(tmp_location.target_pose.pose.orientation.z))));
   }
-  else if (((goal.target_pose.pose.position.z > M_PI_2) && (goal.target_pose.pose.position.z < M_PI))) //Second quadrant
+  else if (((fabs(goal.target_pose.pose.position.z) > M_PI_2) && (fabs(goal.target_pose.pose.position.z) < M_PI))) //Second quadrant
   {
     perp_line_angle = fabs(atan(-1 / (tan(fabs(tmp_location.target_pose.pose.orientation.z - M_PI)))));
   }
-  else if (((goal.target_pose.pose.position.z > M_PI) && (goal.target_pose.pose.position.z < (2 * M_PI * (3 / 4))))) //Angle in third quadrant
+  else if (((fabs(goal.target_pose.pose.position.z) > M_PI) && (fabs(goal.target_pose.pose.position.z) < (2 * M_PI * (3 / 4))))) //Angle in third quadrant
   {
     perp_line_angle = fabs(atan(-1 / (tan(fabs(tmp_location.target_pose.pose.orientation.z - M_PI)))));
   }
-  else if ((((goal.target_pose.pose.position.z > (2 * M_PI * (3 / 4)))) && (goal.target_pose.pose.position.z < (2 * M_PI)))) //Angle in fourth quadrant
+  else if ((((fabs(goal.target_pose.pose.position.z) > (2 * M_PI * (3 / 4)))) && (fabs(goal.target_pose.pose.position.z) < (2 * M_PI)))) //Angle in fourth quadrant
   {
     perp_line_angle = fabs(atan(-1 / (tan(fabs(tmp_location.target_pose.pose.orientation.z- (2 * M_PI))))));
   }
 
   //We now do calculations which we assign to the datatype goal (x,y and z) in order for the robot to move right/left at the exhibit and take an image.
 
-  if (((goal.target_pose.pose.position.z < 0.01) && (goal.target_pose.pose.position.z > (2 * M_PI - 0.01))) || ((goal.target_pose.pose.position.z < (M_PI + 0.01)) && (goal.target_pose.pose.position.z > (M_PI - 0.01))))
+  if (((fabs(goal.target_pose.pose.position.z) < 0.01) && (fabs(goal.target_pose.pose.position.z) > (2 * M_PI - 0.01))) || ((fabs(goal.target_pose.pose.position.z) < (M_PI + 0.01)) && (fabs(goal.target_pose.pose.position.z) > (M_PI - 0.01))))
   //The robot has its direction facing 0 or 180 degrees, and only its increments are defines as following:
   {
     increment_x = step;
@@ -253,7 +253,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal)
     }
   }
 
-  else if (((goal.target_pose.pose.position.z < (M_PI_2 + 0.01)) && (goal.target_pose.pose.position.z > (M_PI_2 - 0.01))) || ((goal.target_pose.pose.position.z < (((3 / 4) * 2 * M_PI) + 0.01)) && (goal.target_pose.pose.position.z > (((3 / 4) * 2 * M_PI) - 0.01)))) //If cos(angle) = apprx. 1 //6.28 = ca. 2*Pi
+  else if (((fabs(goal.target_pose.pose.position.z) < (M_PI_2 + 0.01)) && (fabs(goal.target_pose.pose.position.z) > (M_PI_2 - 0.01))) || ((fabs(goal.target_pose.pose.position.z) < (((3 / 4) * 2 * M_PI) + 0.01)) && (fabs(goal.target_pose.pose.position.z) > (((3 / 4) * 2 * M_PI) - 0.01)))) //If cos(angle) = apprx. 1 //6.28 = ca. 2*Pi
   {                                                                                                                                                                                                                                                                      //The robot has its direction 90 or 270 degrees
     increment_x = 0;
     increment_y = step;
