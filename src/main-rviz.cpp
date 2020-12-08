@@ -381,5 +381,6 @@ double euclidianDist(double x1, double y1, double refx, double refy)
 
 void user_input_cb(const std_msgs::Char::ConstPtr &msg)
 {
+  ROS_INFO("Command recieved: %d", msg->data);
   start = msg->data;
 }
