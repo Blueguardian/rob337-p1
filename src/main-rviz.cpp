@@ -80,8 +80,8 @@ int main(int argc, char **argv)
         ros::shutdown();
       }
       i++;
+      ros::spinOnce();
     }
-    
     if (start == 'q')
     {
       std_msgs::Char msg;
@@ -97,8 +97,6 @@ int main(int argc, char **argv)
 
 void _goal_reached_cb(const actionlib::SimpleClientGoalState &state, const move_base_msgs::MoveBaseResult::ConstPtr &result)
 {
- // if (state.toString() == "SUCCEEDED")
-  //{
     ROS_INFO("The goal has succesfully been reached!");
     ros::Publisher take_picture = ptrnh->advertise<std_msgs::Bool>("take_picture", 1);
     std_msgs::Bool msg;
@@ -108,11 +106,6 @@ void _goal_reached_cb(const actionlib::SimpleClientGoalState &state, const move_
     sleep.sleep();
     msg.data = false;
     take_picture.publish(msg);
- // }
-  //else
-  //{
-  //  ROS_INFO("Something went wrong!");
-  //}
 }
 
 void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
@@ -138,6 +131,7 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
   goal_target = get_dif2Dgoal(goal_target);
 
   rotation.inverse();
+  rotation.normalize();
   angles_recieved.push_back(rotation.getAngle());
 
   goal_target.target_pose.pose.orientation.z = rotation.getZ();
@@ -154,7 +148,7 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 void send_goal(move_base_msgs::MoveBaseGoal goal_point, int i)
 {
   MoveBaseClient ac("move_base", true);
-  ac.sendGoal(goal_point, boost::bind(&_goal_reached_cb, _1, _2));
+  ac.sendGoal(goal_point, _goal_reached_cb);
   ROS_INFO("Sending goal and markers..");
   //  send_marker(goal_point);
   ros::Publisher marker_pub = ptrnh->advertise<visualization_msgs::MarkerArray>("visualization_marker", 1);
@@ -164,26 +158,6 @@ void send_goal(move_base_msgs::MoveBaseGoal goal_point, int i)
   ROS_INFO("Performing scan of exhibition...");
   exhib_scan(goal_point, i);
 }
-
-/*double rob_facing_angle(double angle)
-{
-  //This function takes the angle orientation of the particular object and converts it into
-  //an angle that would points directly towards the exhibition.
-
-  //beginning of the function
-
-  double oppositeangle = 0;
-
-  if (angle >= 0 && angle <= M_PI) //If this is true, the angle of the exhibitions would be added to Pi, to face it with a positive angle
-  {
-    oppositeangle = angle + M_PI;
-  }
-  else if (angle > M_PI && angle < (2 * M_PI)) //If this is true, the angle of the exhibitions would be added to Pi, to face it with a positive angle
-  {
-    oppositeangle = angle - M_PI;
-  }
-  return oppositeangle;
-}*/
 
 void send_marker(move_base_msgs::MoveBaseGoal goal)
 {
