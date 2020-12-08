@@ -209,9 +209,27 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal)
 
   //We define how many meters the robot must move each step while re-locating
   double step = 0.3;
-  double prep_line_gradient = atan(-1 / (tan(tmp_location.target_pose.pose.orientation.z))); //Calculation of perpendicular angle, used in increment
+  double perp_line_angle = 0; //Calculation of perpendicular angle, used in increment
   double increment_x = 0;
   double increment_y = 0;
+
+  if (((goal.target_pose.pose.position.z > 0) && (goal.target_pose.pose.position.z < M_PI_2))) //Angle in fist quadrant
+  {                                                                                            //This means the angle can be calculated as
+    perp_line_angle = fabs(atan(-1 / (tan(tmp_location.target_pose.pose.orientation.z))));
+  }
+  else if (((goal.target_pose.pose.position.z > M_PI_2) && (goal.target_pose.pose.position.z < M_PI))) //Second quadrant
+  {
+    perp_line_angle = fabs(atan(-1 / (tan(fabs(tmp_location.target_pose.pose.orientation.z - M_PI)))));
+  }
+  else if (((goal.target_pose.pose.position.z > M_PI) && (goal.target_pose.pose.position.z < (2 * M_PI * (3 / 4))))) //Angle in third quadrant
+  {
+    perp_line_angle = fabs(atan(-1 / (tan(fabs(tmp_location.target_pose.pose.orientation.z - M_PI)))));
+  }
+  else if ((((goal.target_pose.pose.position.z > (2 * M_PI * (3 / 4)))) && (goal.target_pose.pose.position.z < (2 * M_PI)))) //Angle in fourth quadrant
+  {
+    perp_line_angle = fabs(atan(-1 / (tan(fabs(tmp_location.target_pose.pose.orientation.z- (2 * M_PI))))));
+  }
+
   //We now do calculations which we assign to the datatype goal (x,y and z) in order for the robot to move right/left at the exhibit and take an image.
 
   if (((goal.target_pose.pose.position.z < 0.01) && (goal.target_pose.pose.position.z > (2 * M_PI - 0.01))) || ((goal.target_pose.pose.position.z < (M_PI + 0.01)) && (goal.target_pose.pose.position.z > (M_PI - 0.01))))
@@ -219,20 +237,48 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal)
   {
     increment_x = step;
     increment_y = 0;
+    for (int i = 0; i < 3; i++)
+    {
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
+      send_goal(goal);
+    }
+    goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
+    goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+    for (int i = 0; i < 3; i++)
+    {
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
+      send_goal(goal);
+    }
   }
 
   else if (((goal.target_pose.pose.position.z < (M_PI_2 + 0.01)) && (goal.target_pose.pose.position.z > (M_PI_2 - 0.01))) || ((goal.target_pose.pose.position.z < (((3 / 4) * 2 * M_PI) + 0.01)) && (goal.target_pose.pose.position.z > (((3 / 4) * 2 * M_PI) - 0.01)))) //If cos(angle) = apprx. 1 //6.28 = ca. 2*Pi
   {                                                                                                                                                                                                                                                                      //The robot has its direction 90 or 270 degrees
     increment_x = 0;
     increment_y = step;
+    for (int i = 0; i < 3; i++)
+    {
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
+      send_goal(goal);
+    }
+    goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
+    goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+    for (int i = 0; i < 3; i++)
+    {
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
+      send_goal(goal);
+    }
   }
   else //The robot is facing somewhere between - calculations for steps required!
   {
-    increment_x = step * cos(prep_line_gradient);
-    increment_y = step * sin(prep_line_gradient);
+    increment_x = step * cos(perp_line_angle);
+    increment_y = step * sin(perp_line_angle);
   }
 
-  if (((prep_line_gradient > 0) && (prep_line_gradient < M_PI_2)) || ((prep_line_gradient > M_PI) && (prep_line_gradient < (2 * M_PI * (3 / 4)))))
+  if (((perp_line_angle > 0) && (perp_line_angle < M_PI_2)) || ((perp_line_angle > M_PI) && (perp_line_angle < (2 * M_PI * (3 / 4))))) //Robot facing either first or third quadrant
   {
     for (int i = 0; i < 3; i++)
     { //We make the robot move 3 steps to the right, in which it faces the exhibits
