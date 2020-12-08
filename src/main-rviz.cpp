@@ -54,7 +54,6 @@ int main(int argc, char **argv)
     int i = 0;
     while (start == 't' && i < targets.size())
     {
-      int end = getchar();
       if (i == 0)
       {
         ROS_INFO("Sorting targets for closest target...");
@@ -69,7 +68,7 @@ int main(int argc, char **argv)
         ROS_INFO("Sending %d. goal", i+1);
         send_goal(targets[i], i);
       }
-      if (end == 'q')
+      if (start == 'q')
       {
         ROS_INFO("Cancelling goals..");
         ac.cancelAllGoals();
@@ -80,8 +79,8 @@ int main(int argc, char **argv)
         ros::shutdown();
       }
       i++;
+      ros::spinOnce();
     }
-    ros::spinOnce();
     if (start == 'q')
     {
       std_msgs::Char msg;
@@ -90,6 +89,7 @@ int main(int argc, char **argv)
       ROS_INFO("Shutting down..");
       ros::shutdown();
     }
+    ros::spinOnce();
   }
   return 0; //Program run succesfully.
 }
