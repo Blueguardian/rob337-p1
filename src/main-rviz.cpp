@@ -150,7 +150,7 @@ double rob_facing_angle(double angle)
 
   //beginning of the function
 
-  int oppositeangle = 0;
+  double oppositeangle = 0;
 
   if (angle >= 0 && angle <= M_PI) //If this is true, the angle of the exhibitions would be added to Pi, to face it with a positive angle
   {
@@ -219,6 +219,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal)
   double perp_line_angle = 0; //Calculation of perpendicular angle, used in increment
   double increment_x = 0;
   double increment_y = 0;
+  MoveBaseClient ac1("move_base", true);
 
   if (((fabs(goal.target_pose.pose.position.z) > 0) && (fabs(goal.target_pose.pose.position.z) < M_PI_2))) //Angle in fist quadrant
   {                                                                                            //This means the angle can be calculated as
@@ -248,7 +249,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal)
     {
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
-      send_goal(goal);
+      ac1.sendGoalAndWait(goal);
     }
     goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
     goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
@@ -256,7 +257,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal)
     {
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
-      send_goal(goal);
+      ac1.sendGoalAndWait(goal);
     }
   }
 
@@ -268,7 +269,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal)
     {
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
-      send_goal(goal);
+      ac1.sendGoalAndWait(goal);
     }
     goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
     goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
@@ -276,7 +277,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal)
     {
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
-      send_goal(goal);
+      ac1.sendGoalAndWait(goal);
     }
   }
   else //The robot is facing somewhere between - calculations for steps required!
@@ -291,7 +292,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal)
     { //We make the robot move 3 steps to the right, in which it faces the exhibits
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
-      send_goal(goal);
+      ac1.sendGoalAndWait(goal);
     }
     goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
     goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
@@ -299,7 +300,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal)
     { //We make the robot move 3 steps to the right, in which it faces the exhibits
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
-      send_goal(goal);
+      ac1.sendGoalAndWait(goal);
     }
   }
   else
@@ -308,7 +309,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal)
     {
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
-      send_goal(goal);
+      ac1.sendGoalAndWait(goal);
     }
     goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
     goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
@@ -316,12 +317,12 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal)
     {
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
-      send_goal(goal);
+      ac1.sendGoalAndWait(goal);
     }
   }
   goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
   goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
-  send_goal(goal);
+  ac1.sendGoalAndWait(goal);
 }
 
 void sortCoord(std::vector<move_base_msgs::MoveBaseGoal> target, int startpos, int itera, double refx, double refy)
