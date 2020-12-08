@@ -29,6 +29,7 @@ void sortCoord(std::vector<move_base_msgs::MoveBaseGoal> target, int startpos, i
 double euclidianDist(double x1, double y1, double refx, double refy);
 void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter);
 
+
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "master"); //ros initialisation
@@ -114,7 +115,7 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
   goal_target.target_pose.pose.position.x = msg->pose.position.x;
   goal_target.target_pose.pose.position.y = msg->pose.position.y;
-  goal_target.target_pose.pose.orientation.z = msg->pose.position.z;
+  goal_target.target_pose.pose.position.z = msg->pose.position.z;
 
   rotation.setX(msg->pose.orientation.x);
   rotation.setY(msg->pose.orientation.y);
