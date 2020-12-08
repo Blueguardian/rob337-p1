@@ -18,14 +18,15 @@ std::vector<move_base_msgs::MoveBaseGoal> targets;
 visualization_msgs::MarkerArray markers;
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
-void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg);                                                        //Prints messeges containing the received coordinates                                                             //Prints messeges containing the received coordinates
+void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg);                                                      //Prints messeges containing the received coordinates                                                             //Prints messeges containing the received coordinates
 void goal_reached_cb(const actionlib::SimpleClientGoalState &state, const move_base_msgs::MoveBaseResult::ConstPtr &result); //Goal has been reached                                                             //Odometry callback function
 void send_goal(move_base_msgs::MoveBaseGoal goal_point, int i);                                                                //Send goal to move_base server
 void send_marker(move_base_msgs::MoveBaseGoal goal); 
 double rob_facing_angle(double angle);
 move_base_msgs::MoveBaseGoal get_dif2Dgoal(move_base_msgs::MoveBaseGoal goal);
 void sortCoord(std::vector<move_base_msgs::MoveBaseGoal> target, int startpos, int itera, double refx, double refy);
-double euclidianDist(double x1, double y1, double refx, double refy);                                                                
+double euclidianDist(double x1, double y1, double refx, double refy);
+void exhib_scan(move_base_msgs::MoveBaseGoal goal);                                                                
 
 int main(int argc, char **argv)
 {
@@ -33,7 +34,7 @@ int main(int argc, char **argv)
   ros::NodeHandle nh2;
   ros::Rate loop(1);
   ptrnh = &nh2;
-  ros::Subscriber user_input = nh2.subscribe("new_exhibit", 1, userInterface_cb);    // Subscribes to the user_input topic and when it receives a messege it runs the callback function
+  ros::Subscriber user_input = nh2.subscribe("new_exhibit", 1, userInterface_cb); // Subscribes to the user_input topic and when it receives a messege it runs the callback function
   ros::Publisher base_state_pub = nh2.advertise<std_msgs::Bool>("base_state", 5); //Creating a publisher for publishing the state of the MoveBaseClient
 
   MoveBaseClient ac("move_base", true); //Defining a client to send goals to the move_base server.
@@ -139,26 +140,27 @@ void send_goal(move_base_msgs::MoveBaseGoal goal_point, int i)
   markers.markers.erase(markers.markers.begin()+i);
   markers.markers.shrink_to_fit();
   ac.waitForResult();
+  exhib_scan(goal_point);
 }
 
 double rob_facing_angle(double angle)
 {
-    //This function takes the angle orientation of the particular object and converts it into
-    //an angle that would points directly towards the exhibition.
+  //This function takes the angle orientation of the particular object and converts it into
+  //an angle that would points directly towards the exhibition.
 
-    //beginning of the function
+  //beginning of the function
 
-    int oppositeangle = 0;
+  int oppositeangle = 0;
 
-    if(angle>=0 && angle<=M_PI) //If this is true, the angle of the exhibitions would be added to Pi, to face it with a positive angle
-        { 
-        oppositeangle = angle+M_PI;
-        }
-    else if(angle>M_PI && angle<(2*M_PI)) //If this is true, the angle of the exhibitions would be added to Pi, to face it with a positive angle
-        { 
-        oppositeangle = angle-M_PI;
-        } 
-    return oppositeangle;
+  if (angle >= 0 && angle <= M_PI) //If this is true, the angle of the exhibitions would be added to Pi, to face it with a positive angle
+  {
+    oppositeangle = angle + M_PI;
+  }
+  else if (angle > M_PI && angle < (2 * M_PI)) //If this is true, the angle of the exhibitions would be added to Pi, to face it with a positive angle
+  {
+    oppositeangle = angle - M_PI;
+  }
+  return oppositeangle;
 }
 
 void send_marker(move_base_msgs::MoveBaseGoal goal)
@@ -193,15 +195,133 @@ void send_marker(move_base_msgs::MoveBaseGoal goal)
 
 move_base_msgs::MoveBaseGoal get_dif2Dgoal(move_base_msgs::MoveBaseGoal goal)
 {
-    double dif_x = 0.5*cos(goal.target_pose.pose.orientation.z);
-    double dif_y = 0.5*sin(goal.target_pose.pose.orientation.z);
+  double dif_x = 0.5 * cos(goal.target_pose.pose.orientation.z);
+  double dif_y = 0.5 * sin(goal.target_pose.pose.orientation.z);
 
-    move_base_msgs::MoveBaseGoal goal_target;
-    goal_target.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z;
-    goal_target.target_pose.pose.position.x = goal.target_pose.pose.position.x-dif_x;
-    goal_target.target_pose.pose.position.y = goal.target_pose.pose.position.y-dif_y;
+  move_base_msgs::MoveBaseGoal goal_target;
+  goal_target.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z;
+  goal_target.target_pose.pose.position.x = goal.target_pose.pose.position.x - dif_x;
+  goal_target.target_pose.pose.position.y = goal.target_pose.pose.position.y - dif_y;
 
-    return goal_target;
+  return goal_target;
+}
+
+void exhib_scan(move_base_msgs::MoveBaseGoal goal)
+{
+  //We save variables for the current exhibit position
+  move_base_msgs::MoveBaseGoal tmp_location;
+  tmp_location.target_pose.pose.position.x = goal.target_pose.pose.position.x;
+  tmp_location.target_pose.pose.position.y = goal.target_pose.pose.position.y;
+  tmp_location.target_pose.pose.orientation.z = goal.target_pose.pose.position.z;
+
+  //We define how many meters the robot must move each step while re-locating
+  double step = 0.3;
+  double perp_line_angle = 0; //Calculation of perpendicular angle, used in increment
+  double increment_x = 0;
+  double increment_y = 0;
+
+  if (((fabs(goal.target_pose.pose.position.z) > 0) && (fabs(goal.target_pose.pose.position.z) < M_PI_2))) //Angle in fist quadrant
+  {                                                                                            //This means the angle can be calculated as
+    perp_line_angle = fabs(atan(-1 / (tan(tmp_location.target_pose.pose.orientation.z))));
+  }
+  else if (((fabs(goal.target_pose.pose.position.z) > M_PI_2) && (fabs(goal.target_pose.pose.position.z) < M_PI))) //Second quadrant
+  {
+    perp_line_angle = fabs(atan(-1 / (tan(fabs(tmp_location.target_pose.pose.orientation.z - M_PI)))));
+  }
+  else if (((fabs(goal.target_pose.pose.position.z) > M_PI) && (fabs(goal.target_pose.pose.position.z) < (2 * M_PI * (3 / 4))))) //Angle in third quadrant
+  {
+    perp_line_angle = fabs(atan(-1 / (tan(fabs(tmp_location.target_pose.pose.orientation.z - M_PI)))));
+  }
+  else if ((((fabs(goal.target_pose.pose.position.z) > (2 * M_PI * (3 / 4)))) && (fabs(goal.target_pose.pose.position.z) < (2 * M_PI)))) //Angle in fourth quadrant
+  {
+    perp_line_angle = fabs(atan(-1 / (tan(fabs(tmp_location.target_pose.pose.orientation.z- (2 * M_PI))))));
+  }
+
+  //We now do calculations which we assign to the datatype goal (x,y and z) in order for the robot to move right/left at the exhibit and take an image.
+
+  if (((fabs(goal.target_pose.pose.position.z) < 0.01) && (fabs(goal.target_pose.pose.position.z) > (2 * M_PI - 0.01))) || ((fabs(goal.target_pose.pose.position.z) < (M_PI + 0.01)) && (fabs(goal.target_pose.pose.position.z) > (M_PI - 0.01))))
+  //The robot has its direction facing 0 or 180 degrees, and only its increments are defines as following:
+  {
+    increment_x = step;
+    increment_y = 0;
+    for (int i = 0; i < 3; i++)
+    {
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
+      send_goal(goal);
+    }
+    goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
+    goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+    for (int i = 0; i < 3; i++)
+    {
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
+      send_goal(goal);
+    }
+  }
+
+  else if (((fabs(goal.target_pose.pose.position.z) < (M_PI_2 + 0.01)) && (fabs(goal.target_pose.pose.position.z) > (M_PI_2 - 0.01))) || ((fabs(goal.target_pose.pose.position.z) < (((3 / 4) * 2 * M_PI) + 0.01)) && (fabs(goal.target_pose.pose.position.z) > (((3 / 4) * 2 * M_PI) - 0.01)))) //If cos(angle) = apprx. 1 //6.28 = ca. 2*Pi
+  {                                                                                                                                                                                                                                                                      //The robot has its direction 90 or 270 degrees
+    increment_x = 0;
+    increment_y = step;
+    for (int i = 0; i < 3; i++)
+    {
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
+      send_goal(goal);
+    }
+    goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
+    goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+    for (int i = 0; i < 3; i++)
+    {
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
+      send_goal(goal);
+    }
+  }
+  else //The robot is facing somewhere between - calculations for steps required!
+  {
+    increment_x = step * cos(perp_line_angle);
+    increment_y = step * sin(perp_line_angle);
+  }
+
+  if (((perp_line_angle > 0) && (perp_line_angle < M_PI_2)) || ((perp_line_angle > M_PI) && (perp_line_angle < (2 * M_PI * (3 / 4))))) //Robot facing either first or third quadrant
+  {
+    for (int i = 0; i < 3; i++)
+    { //We make the robot move 3 steps to the right, in which it faces the exhibits
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
+      send_goal(goal);
+    }
+    goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
+    goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+    for (int i = 0; i < 3; i++)
+    { //We make the robot move 3 steps to the right, in which it faces the exhibits
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
+      send_goal(goal);
+    }
+  }
+  else
+  {
+    for (int i = 0; i < 3; i++)
+    {
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
+      send_goal(goal);
+    }
+    goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
+    goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+    for (int i = 0; i < 3; i++)
+    {
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
+      send_goal(goal);
+    }
+  }
+  goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
+  goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+  send_goal(goal);
 }
 
 void sortCoord(std::vector<move_base_msgs::MoveBaseGoal> target, int startpos, int itera, double refx, double refy)
