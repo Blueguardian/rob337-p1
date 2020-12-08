@@ -40,13 +40,14 @@ int main(int argc, char **argv)
   ptrnh = &nh2;
   ros::Subscriber user_input = nh2.subscribe("new_exhibit", 1, userInterface_cb); // Subscribes to the user_input topic and when it receives a messege it runs the callback function
   ros::Publisher base_state_pub = nh2.advertise<std_msgs::Bool>("base_state", 5); //Creating a publisher for publishing the state of the MoveBaseClient
-  ros::Subscriber input = nh2.subscribe("user_input", 1, user_input_cb);
+  ros::Subscriber input = nh2.subscribe("userinput", 1, user_input_cb);
+  ros::Publisher terminate = nh2.advertise<std_msgs::Char>("terminate", 1);
 
   MoveBaseClient ac("move_base", true); //Defining a client to send goals to the move_base server.
-  while (!ac.waitForServer(ros::Duration(5.0)))
-  {                                                                 //wait for the action server to come up
-    ROS_INFO("Waiting for the move_base action server to come up"); //Printing a fitting messege.
-  }
+  //while (!ac.waitForServer(ros::Duration(5.0)))
+  //{                                                                 //wait for the action server to come up
+  //  ROS_INFO("Waiting for the move_base action server to come up"); //Printing a fitting messege.
+  //}
   
   while (ros::ok()) //while(!= ros::Shutdown(); or the user has Ctrl+C out of the program.)
   {
@@ -72,14 +73,20 @@ int main(int argc, char **argv)
       {
         ROS_INFO("Cancelling goals..");
         ac.cancelAllGoals();
+        std_msgs::Char msg;
+        msg.data = 0;
+        terminate.publish(msg);
         ROS_INFO("Shutting down..");
         ros::shutdown();
       }
       i++;
     }
-    ros::spin();
+    ros::spinOnce();
     if (start == 'q')
     {
+      std_msgs::Char msg;
+      msg.data = 0;
+      terminate.publish(msg);
       ROS_INFO("Shutting down..");
       ros::shutdown();
     }
