@@ -54,7 +54,7 @@ int main(int argc, char **argv)
   int i = 0;
   while (ros::ok()) //while(!= ros::Shutdown(); or the user has Ctrl+C out of the program.)
   {
- 
+
     while (start == 't' && i < targets.size())
     {
       if (i == 0)
@@ -66,9 +66,9 @@ int main(int argc, char **argv)
       }
       else
       {
-        for (int j = 0; j < targets.size()-i; j++)
+        for (int j = 0; j < targets.size() - i; j++)
         {
-          targets[i].target_pose.header.seq = targets[i].target_pose.header.seq-1;
+          targets[i].target_pose.header.seq = targets[i].target_pose.header.seq - 1;
         }
         ROS_INFO("Sorting targets for closest target...");
         sortCoord(i, targets.size(), targets[i - 1].target_pose.pose.position.x, targets[i - 1].target_pose.pose.position.y);
@@ -138,7 +138,7 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
   goal_target.target_pose.pose.orientation.x = rotation.getX();
   goal_target.target_pose.pose.orientation.y = rotation.getY();
   goal_target.target_pose.header.frame_id = "odom";
-  goal_target.target_pose.header.seq = msg->header.seq+targets.size();
+  goal_target.target_pose.header.seq = msg->header.seq + targets.size();
   // send_goal(goal_target);
   send_marker(goal_target);
   ROS_INFO("Storing target..");
@@ -220,20 +220,20 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
   MoveBaseClient ac1("move_base", true);
 
   if (((fabs(angles_recieved.at(iter)) > 0) && (fabs(angles_recieved.at(iter)) < M_PI_2))) //Angle in fist quadrant
-  {   //This means the angle can be calculated as
+  {                                                                                        //This means the angle can be calculated as
     perp_line_angle = (atan(-1 / (tan(fabs(angles_recieved.at(iter))))));
   }
   else if (((fabs(angles_recieved.at(iter)) > M_PI_2) && (fabs(angles_recieved.at(iter)) < M_PI))) //Second quadrant
   {
-    perp_line_angle = (atan(-1 / (tan(fabs(angles_recieved.at(iter) - M_PI)))));
+    perp_line_angle = (atan(-1 / (tan(M_PI - fabs(angles_recieved.at(iter))))));
   }
   else if (((fabs(angles_recieved.at(iter)) > M_PI) && (fabs(angles_recieved.at(iter)) < (2 * M_PI * (3 / 4))))) //Angle in third quadrant
   {
-    perp_line_angle = (atan(-1 / (tan(fabs(angles_recieved.at(iter) - M_PI)))));
+    perp_line_angle = (atan(-1 / (tan(fabs(angles_recieved.at(iter)) - M_PI))));
   }
   else if ((((fabs(angles_recieved.at(iter)) > (2 * M_PI * (3 / 4)))) && (fabs(angles_recieved.at(iter)) < (2 * M_PI)))) //Angle in fourth quadrant
   {
-    perp_line_angle = (atan(-1 / (tan(fabs(angles_recieved.at(iter) - (2 * M_PI))))));
+    perp_line_angle = (atan(-1 / (tan(fabs((fabs(angles_recieved.at(iter)) - (2 * M_PI)))))));
   }
 
   //We now do calculations which we assign to the datatype goal (x,y and z) in order for the robot to move right/left at the exhibit and take an image.
@@ -288,12 +288,12 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
   }
   else //The robot is facing somewhere between - calculations for steps required!
   {
-    increment_x = step * cos(fabs(perp_line_angle));
-    increment_y = step * sin(fabs(perp_line_angle));
+    increment_x = step * cos(perp_line_angle);
+    increment_y = step * sin(perp_line_angle);
   }
 
-  if (((perp_line_angle > 0) && (skip == false))) //Robot facing either first or third quadrant, as perp_line_angle is positive
-  {
+  if (((fabs(angles_recieved.at(iter)) > 0) && (fabs(angles_recieved.at(iter)) < M_PI_2) && (skip == false)) || ((fabs(angles_recieved.at(iter)) > M_PI) && (fabs(angles_recieved.at(iter)) < (2 * M_PI * (3 / 4))) && (skip == false))) //Robot facing either first or third quadrant, as perp_line_angle is positive
+  {  //The robot has its angle either in first or third quadrant
     for (int i = 0; i < 3; i++)
     { //We make the robot move 3 steps to the right, in which it faces the exhibits
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
@@ -308,8 +308,8 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
     }
   }
-  else if ((perp_line_angle < 0) && skip == false) //Either second or fourth quadrant, thus negative perp_line_angle
-  {
+  else if (((fabs(angles_recieved.at(iter)) > M_PI_2) && (fabs(angles_recieved.at(iter)) < M_PI) && (skip == false)) || ((fabs(angles_recieved.at(iter)) > (2 * M_PI * (3 / 4))) && (fabs(angles_recieved.at(iter)) < (2 * M_PI)) && (skip == false))) //Either second or fourth quadrant, thus negative perp_line_angle
+  { 
     for (int i = 0; i < 3; i++)
     {
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
@@ -425,4 +425,3 @@ double rob_facing_angle(double angle)
   }
   return oppositeangle;
 }
-
