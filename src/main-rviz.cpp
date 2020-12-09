@@ -68,6 +68,10 @@ int main(int argc, char **argv)
       }
       else
       {
+        for (int j = 0; j < targets.size()-i; j++)
+        {
+          targets[i].target_pose.header.seq = targets[i].target_pose.header.seq-1;
+        }
         ROS_INFO("Sorting targets for closest target...");
         sortCoord(targets, i, targets.size(), targets[i - 1].target_pose.pose.position.x, targets[i - 1].target_pose.pose.position.y);
         ROS_INFO("Sending %d. goal", i + 1);
@@ -164,9 +168,9 @@ void send_marker(move_base_msgs::MoveBaseGoal goal)
   marker.ns = "target_point";
   marker.type = visualization_msgs::Marker::ARROW;
   marker.action = visualization_msgs::Marker::ADD;
-  marker.scale.x = 3.0;
-  marker.scale.y = 1.0;
-  marker.scale.z = 1.0;
+  marker.scale.x = 1.0;
+  marker.scale.y = 0.2;
+  marker.scale.z = 0.2;
   marker.color.r = 0.1;
   marker.color.g = 0.1;
   marker.color.b = 1.0;
@@ -377,13 +381,41 @@ void sortCoord(std::vector<move_base_msgs::MoveBaseGoal> target, int startpos, i
     if ((euclidianDist(target[startpos].target_pose.pose.position.x, target[startpos].target_pose.pose.position.y, refx, refy) > (euclidianDist(target[i].target_pose.pose.position.x, target[i].target_pose.pose.position.y, refx, refy))))
     {
       //switches the places of the coordinateset if it's smaller.
-      ROS_INFO("Switching!"); //
-      move_base_msgs::MoveBaseGoal temp;
-      temp = target[startpos];
-      ROS_INFO("Switching [x: %f, y: %f, z: %f] with [x: %f, y: %f, z: %f]", temp.target_pose.pose.position.x, temp.target_pose.pose.position.y, temp.target_pose.pose.position.z, target[i].target_pose.pose.position.x, target[i].target_pose.pose.position.y, target[i].target_pose.pose.position.z);
-      target[startpos] = target[i];
-      target[i] = temp;
+      //ROS_INFO("Switching!"); //
+      //move_base_msgs::MoveBaseGoal temp;
+      //temp = target[startpos];
+      //ROS_INFO("Switching [x: %f, y: %f, z: %f] with [x: %f, y: %f, z: %f]", temp.target_pose.pose.position.x, temp.target_pose.pose.position.y, temp.target_pose.pose.position.z, target[i].target_pose.pose.position.x, target[i].target_pose.pose.position.y, target[i].target_pose.pose.position.z);
+      //target[startpos] = target[i];
+      //target[i] = temp;
       //std::swap(target[startpos], target[i]);
+      move_base_msgs::MoveBaseGoal temp;
+      temp.target_pose.pose.position.x = target[startpos].target_pose.pose.position.x;
+      temp.target_pose.pose.position.y = target[startpos].target_pose.pose.position.y;
+      temp.target_pose.pose.position.z = target[startpos].target_pose.pose.position.z;
+      temp.target_pose.pose.orientation.x = target[startpos].target_pose.pose.orientation.x;
+      temp.target_pose.pose.orientation.y = target[startpos].target_pose.pose.orientation.y;
+      temp.target_pose.pose.orientation.z = target[startpos].target_pose.pose.orientation.z;
+      temp.target_pose.pose.orientation.w = target[startpos].target_pose.pose.orientation.w;
+      temp.target_pose.header.frame_id = target[startpos].target_pose.header.frame_id;
+      temp.target_pose.header.stamp = target[startpos].target_pose.header.stamp;
+      target[startpos].target_pose.pose.position.x = target[i].target_pose.pose.position.x;
+      target[startpos].target_pose.pose.position.y = target[i].target_pose.pose.position.y;
+      target[startpos].target_pose.pose.position.z = target[i].target_pose.pose.position.z;
+      target[startpos].target_pose.pose.orientation.x = target[i].target_pose.pose.orientation.x;
+      target[startpos].target_pose.pose.orientation.y = target[i].target_pose.pose.orientation.y;
+      target[startpos].target_pose.pose.orientation.z = target[i].target_pose.pose.orientation.z;
+      target[startpos].target_pose.pose.orientation.w = target[i].target_pose.pose.orientation.w;
+      target[startpos].target_pose.header.frame_id = target[i].target_pose.header.frame_id;
+      target[startpos].target_pose.header.stamp = target[i].target_pose.header.stamp;
+      target[i].target_pose.pose.position.x = target[startpos].target_pose.pose.position.x;
+      target[i].target_pose.pose.position.y = target[startpos].target_pose.pose.position.y;
+      target[i].target_pose.pose.position.z = target[startpos].target_pose.pose.position.z;
+      target[i].target_pose.pose.orientation.x = target[startpos].target_pose.pose.orientation.x;
+      target[i].target_pose.pose.orientation.y = target[startpos].target_pose.pose.orientation.y;
+      target[i].target_pose.pose.orientation.z = target[startpos].target_pose.pose.orientation.z;
+      target[i].target_pose.pose.orientation.w = target[startpos].target_pose.pose.orientation.w;
+      target[i].target_pose.header.frame_id = target[startpos].target_pose.header.frame_id;
+      target[i].target_pose.header.stamp = target[startpos].target_pose.header.stamp;
     }
   }
 }
