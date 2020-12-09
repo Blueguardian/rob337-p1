@@ -17,7 +17,6 @@ int main(int argc, char **argv)
   ros::Subscriber sub = nh.subscribe("/camera/rgb/image_raw", 1, imageCallback);              //Subscribe to the camera
   ros::Subscriber take_picture = nh.subscribe<std_msgs::Bool>("/takepicture", 1, takepic_cb); //Subscribe to the main function, to know when to take a picture
   while (ros::ok())
-    ROS_INFO("Scanning for callbaks...");
   if (take_picture_check == true)
   {
     ros::Duration(10);          //Wait this long before closing again
