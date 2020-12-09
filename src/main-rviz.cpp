@@ -138,6 +138,7 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
   goal_target.target_pose.pose.orientation.x = rotation.getX();
   goal_target.target_pose.pose.orientation.y = rotation.getY();
   goal_target.target_pose.header.frame_id = msg->header.frame_id;
+  goal_target.target_pose.header.seq = msg->header.seq+targets.size();
   // send_goal(goal_target);
   send_marker(goal_target);
   ROS_INFO("Storing target..");
@@ -367,15 +368,15 @@ void sortCoord(std::vector<move_base_msgs::MoveBaseGoal> target, int startpos, i
       target[startpos].target_pose.pose.orientation.w = target[i].target_pose.pose.orientation.w;
       target[startpos].target_pose.header.frame_id = target[i].target_pose.header.frame_id;
       target[startpos].target_pose.header.stamp = target[i].target_pose.header.stamp;
-      target[i].target_pose.pose.position.x = target[startpos].target_pose.pose.position.x;
-      target[i].target_pose.pose.position.y = target[startpos].target_pose.pose.position.y;
-      target[i].target_pose.pose.position.z = target[startpos].target_pose.pose.position.z;
-      target[i].target_pose.pose.orientation.x = target[startpos].target_pose.pose.orientation.x;
-      target[i].target_pose.pose.orientation.y = target[startpos].target_pose.pose.orientation.y;
-      target[i].target_pose.pose.orientation.z = target[startpos].target_pose.pose.orientation.z;
-      target[i].target_pose.pose.orientation.w = target[startpos].target_pose.pose.orientation.w;
-      target[i].target_pose.header.frame_id = target[startpos].target_pose.header.frame_id;
-      target[i].target_pose.header.stamp = target[startpos].target_pose.header.stamp;
+      target[i].target_pose.pose.position.x = temp.target_pose.pose.position.x;
+      target[i].target_pose.pose.position.y = temp.target_pose.pose.position.y;
+      target[i].target_pose.pose.position.z = temp.target_pose.pose.position.z;
+      target[i].target_pose.pose.orientation.x = temp.target_pose.pose.orientation.x;
+      target[i].target_pose.pose.orientation.y = temp.target_pose.pose.orientation.y;
+      target[i].target_pose.pose.orientation.z = temp.target_pose.pose.orientation.z;
+      target[i].target_pose.pose.orientation.w = temp.target_pose.pose.orientation.w;
+      target[i].target_pose.header.frame_id = temp.target_pose.header.frame_id;
+      target[i].target_pose.header.stamp = temp.target_pose.header.stamp;
     }
   }
 }
