@@ -446,6 +446,7 @@ double rob_facing_angle(double angle)
 
   //beginning of the function
 
+  angle = fabs(angle);
   double oppositeangle = 0;
 
   if (angle >= 0 && angle <= M_PI) //If this is true, the angle of the exhibitions would be added to Pi, to face it with a positive angle
