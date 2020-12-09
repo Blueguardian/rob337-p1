@@ -19,6 +19,7 @@ std::vector<move_base_msgs::MoveBaseGoal> targets;
 std::vector<double> angles_recieved;
 visualization_msgs::MarkerArray markers;
 int start = 0;
+int id = 0;
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg);                                                      //Prints messeges containing the received coordinates                                                             //Prints messeges containing the received coordinates
@@ -31,6 +32,7 @@ void sortCoord(std::vector<move_base_msgs::MoveBaseGoal> target, int startpos, i
 double euclidianDist(double x1, double y1, double refx, double refy);
 void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter);
 void user_input_cb(const std_msgs::Char::ConstPtr &msg);
+double rob_facing_angle(double angle);
 double angle_according(double step, double n_step);
 
 int main(int argc, char **argv)
@@ -39,16 +41,16 @@ int main(int argc, char **argv)
   ros::NodeHandle nh2;
   ros::Rate loop(1);
   ptrnh = &nh2;
+
   ros::Subscriber user_input = nh2.subscribe("new_exhibit", 1, userInterface_cb); // Subscribes to the user_input topic and when it receives a messege it runs the callback function
   ros::Publisher base_state_pub = nh2.advertise<std_msgs::Bool>("base_state", 5); //Creating a publisher for publishing the state of the MoveBaseClient
-  ros::Subscriber input = nh2.subscribe("userinput", 1, user_input_cb);
-  ros::Publisher terminate = nh2.advertise<std_msgs::Char>("terminate", 1);
+  ros::Subscriber input = nh2.subscribe("userinput", 10, user_input_cb);
 
   MoveBaseClient ac("move_base", true); //Defining a client to send goals to the move_base server.
-  //while (!ac.waitForServer(ros::Duration(5.0)))
-  //{                                                                 //wait for the action server to come up
-  //  ROS_INFO("Waiting for the move_base action server to come up"); //Printing a fitting messege.
-  //}
+  while (!ac.waitForServer(ros::Duration(5.0)))
+  {                                                                 //wait for the action server to come up
+    ROS_INFO("Waiting for the move_base action server to come up"); //Printing a fitting messege.
+  }
 
   while (ros::ok()) //while(!= ros::Shutdown(); or the user has Ctrl+C out of the program.)
   {
@@ -73,9 +75,6 @@ int main(int argc, char **argv)
       {
         ROS_INFO("Cancelling goals..");
         ac.cancelAllGoals();
-        std_msgs::Char msg;
-        msg.data = 0;
-        terminate.publish(msg);
         ROS_INFO("Shutting down..");
         ros::shutdown();
       }
@@ -84,9 +83,6 @@ int main(int argc, char **argv)
     }
     if (start == 'q')
     {
-      std_msgs::Char msg;
-      msg.data = 0;
-      terminate.publish(msg);
       ROS_INFO("Shutting down..");
       ros::shutdown();
     }
@@ -98,7 +94,7 @@ int main(int argc, char **argv)
 void _goal_reached_cb(const actionlib::SimpleClientGoalState &state, const move_base_msgs::MoveBaseResult::ConstPtr &result)
 {
   ROS_INFO("The goal has succesfully been reached!");
-  ros::Publisher take_picture = ptrnh->advertise<std_msgs::Bool>("take_picture", 1);
+  ros::Publisher take_picture = ptrnh->advertise<std_msgs::Bool>("/takepicture", 1);
   std_msgs::Bool msg;
   msg.data = true;
   take_picture.publish(msg);
@@ -118,7 +114,7 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
   goal_target.target_pose.pose.position.x = msg->pose.position.x;
   goal_target.target_pose.pose.position.y = msg->pose.position.y;
-  goal_target.target_pose.pose.position.z = msg->pose.position.z;
+  goal_target.target_pose.pose.orientation.z = msg->pose.position.z;
 
   rotation.setX(msg->pose.orientation.x);
   rotation.setY(msg->pose.orientation.y);
@@ -129,10 +125,9 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
   goal_target.target_pose.pose.orientation.z = rotation.getAngle();
   goal_target = get_dif2Dgoal(goal_target);
-
-  rotation.inverse();
+  rotation.setRPY(0, 0, rob_facing_angle(rotation.getAngle()));
+  angles_recieved.push_back(rob_facing_angle(rotation.getAngle()));
   rotation.normalize();
-  angles_recieved.push_back(rotation.getAngle());
 
   goal_target.target_pose.pose.orientation.z = rotation.getZ();
   goal_target.target_pose.pose.orientation.w = rotation.getW();
@@ -150,7 +145,6 @@ void send_goal(move_base_msgs::MoveBaseGoal goal_point, int i)
   MoveBaseClient ac("move_base", true);
   ac.sendGoal(goal_point, _goal_reached_cb);
   ROS_INFO("Sending goal and markers..");
-  //  send_marker(goal_point);
   ros::Publisher marker_pub = ptrnh->advertise<visualization_msgs::MarkerArray>("visualization_marker", 1);
   marker_pub.publish(markers);
   markers.markers.erase(markers.markers.begin() + i);
@@ -168,24 +162,26 @@ void send_marker(move_base_msgs::MoveBaseGoal goal)
   marker.ns = "target_point";
   marker.type = visualization_msgs::Marker::ARROW;
   marker.action = visualization_msgs::Marker::ADD;
-  marker.scale.x = 3.0;
+  marker.scale.x = 1.0;
   marker.scale.y = 0.2;
   marker.scale.z = 0.2;
-  marker.color.r = 0.0;
-  marker.color.g = 1.0;
-  marker.color.b = 0.0;
+  marker.color.r = 0.1;
+  marker.color.g = 0.1;
+  marker.color.b = 1.0;
   marker.color.a = 1.0;
   marker.pose.orientation.x = 0;
   marker.pose.orientation.y = 0.7071;
   marker.pose.orientation.z = 0;
   marker.pose.orientation.w = 0.7071;
   marker.lifetime = ros::Duration();
-  marker.header.frame_id = goal.target_pose.header.frame_id;
-  marker.id = 1;
+  marker.header.frame_id = "base link";
+  marker.id = id;
   marker.pose.position = goal.target_pose.pose.position;
   marker.pose.position.z += marker.scale.x;
+  marker.header.stamp = ros::Time();
   markers.markers.push_back(marker);
   ROS_INFO("Storing marker for publishing"); //For testing purposes.
+  id++;
 }
 
 move_base_msgs::MoveBaseGoal get_dif2Dgoal(move_base_msgs::MoveBaseGoal goal)
@@ -400,16 +396,20 @@ void sortCoord(std::vector<move_base_msgs::MoveBaseGoal> target, int startpos, i
   //to compare them by their euclidian distance. It then switches the sets if the former set is smaller than the latter.
 
   //beginning of function
+  ROS_INFO("Sorting started!...");
 
   for (int i = startpos; i < itera; i++) //iterator for the first coordinateset
   {
     if ((euclidianDist(target[startpos].target_pose.pose.position.x, target[startpos].target_pose.pose.position.y, refx, refy) > (euclidianDist(target[i].target_pose.pose.position.x, target[i].target_pose.pose.position.y, refx, refy))))
     {
       //switches the places of the coordinateset if it's smaller.
+      ROS_INFO("Switching!"); //
+      move_base_msgs::MoveBaseGoal temp;
+      temp = target[startpos];
+      ROS_INFO("Switching [x: %f, y: %f, z: %f] with [x: %f, y: %f, z: %f]", temp.target_pose.pose.position.x, temp.target_pose.pose.position.y, temp.target_pose.pose.position.z, target[i].target_pose.pose.position.x, target[i].target_pose.pose.position.y, target[i].target_pose.pose.position.z);
+      target[startpos] = target[i];
+      target[i] = temp;
       //std::swap(target[startpos], target[i]);
-      std::swap(target[startpos].target_pose.pose.position.x, target[i].target_pose.pose.position.x);
-      std::swap(target[startpos].target_pose.pose.position.y, target[i].target_pose.pose.position.y);
-      std::swap(target[startpos].target_pose.pose.position.z, target[i].target_pose.pose.position.z);
     }
   }
 }
@@ -433,6 +433,26 @@ void user_input_cb(const std_msgs::Char::ConstPtr &msg)
   start = msg->data;
 }
 
+double rob_facing_angle(double angle)
+{
+  //This function takes the angle orientation of the particular object and converts it into
+  //an angle that would points directly towards the exhibition.
+
+  //beginning of the function
+
+  double oppositeangle = 0;
+
+  if (angle >= 0 && angle <= M_PI) //If this is true, the angle of the exhibitions would be added to Pi, to face it with a positive angle
+  {
+    oppositeangle = angle + M_PI;
+  }
+  else if (angle > M_PI && angle < (2 * M_PI)) //If this is true, the angle of the exhibitions would be added to Pi, to face it with a positive angle
+  {
+    oppositeangle = angle - M_PI;
+  }
+  return oppositeangle;
+
+}
 double angle_according(double step, double n_step)
 {
   return atan((step * n_step) / 0.5);
