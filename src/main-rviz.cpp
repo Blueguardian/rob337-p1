@@ -164,9 +164,9 @@ void send_marker(move_base_msgs::MoveBaseGoal goal)
   marker.ns = "target_point";
   marker.type = visualization_msgs::Marker::ARROW;
   marker.action = visualization_msgs::Marker::ADD;
-  marker.scale.x = 1.0;
-  marker.scale.y = 0.2;
-  marker.scale.z = 0.2;
+  marker.scale.x = 3.0;
+  marker.scale.y = 1.0;
+  marker.scale.z = 1.0;
   marker.color.r = 0.1;
   marker.color.g = 0.1;
   marker.color.b = 1.0;
@@ -176,7 +176,7 @@ void send_marker(move_base_msgs::MoveBaseGoal goal)
   marker.pose.orientation.z = 0;
   marker.pose.orientation.w = 0.7071;
   marker.lifetime = ros::Duration();
-  marker.header.frame_id = "base link";
+  marker.header.frame_id = "map";
   marker.id = id;
   marker.pose.position = goal.target_pose.pose.position;
   marker.pose.position.z += marker.scale.x;
