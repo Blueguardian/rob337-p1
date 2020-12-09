@@ -129,7 +129,7 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
   goal_target.target_pose.pose.orientation.z = rotation.getAngle();
   goal_target = get_dif2Dgoal(goal_target);
-  rotation.setRPY(0, 0, (rotation.getAngle()-M_PI));
+  rotation.setEulerZYX(rob_facing_angle(rotation.getAngle()), 0 ,0);
   angles_recieved.push_back(rob_facing_angle(rotation.getAngle()));
   rotation.normalize();
 
