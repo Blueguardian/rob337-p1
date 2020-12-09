@@ -53,10 +53,10 @@ int main(int argc, char **argv)
   {                                                                 //wait for the action server to come up
     ROS_INFO("Waiting for the move_base action server to come up"); //Printing a fitting messege.
   }
-
+  int i = 0;
   while (ros::ok()) //while(!= ros::Shutdown(); or the user has Ctrl+C out of the program.)
   {
-    int i = 0;
+ 
     while (start == 't' && i < targets.size())
     {
       if (i == 0)
