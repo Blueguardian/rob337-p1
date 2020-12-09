@@ -369,14 +369,17 @@ void sortCoord(std::vector<move_base_msgs::MoveBaseGoal> target, int startpos, i
   //to compare them by their euclidian distance. It then switches the sets if the former set is smaller than the latter.
 
   //beginning of function
+  ROS_INFO("Sorting started!...");
 
   for (int i = startpos; i < itera; i++) //iterator for the first coordinateset
   {
     if ((euclidianDist(target[startpos].target_pose.pose.position.x, target[startpos].target_pose.pose.position.y, refx, refy) > (euclidianDist(target[i].target_pose.pose.position.x, target[i].target_pose.pose.position.y, refx, refy))))
     {
       //switches the places of the coordinateset if it's smaller.
+      ROS_INFO("Switching!"); //
       move_base_msgs::MoveBaseGoal temp;
       temp = target[startpos];
+      ROS_INFO("Switching [x: %f, y: %f, z: %f] with [x: %f, y: %f, z: %f]", temp.target_pose.pose.position.x, temp.target_pose.pose.position.y, temp.target_pose.pose.position.z, target[i].target_pose.pose.position.x, target[i].target_pose.pose.position.y, target[i].target_pose.pose.position.z);
       target[startpos] = target[i];
       target[i] = temp;
       //std::swap(target[startpos], target[i]);
