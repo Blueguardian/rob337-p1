@@ -14,7 +14,6 @@
 #include "tf/transform_datatypes.h"
 #include <vector>
 
-
 ros::NodeHandle *ptrnh;
 std::vector<move_base_msgs::MoveBaseGoal> targets;
 std::vector<double> angles_recieved;
@@ -268,7 +267,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
     }
     goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
     goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
-    
+
     for (int i = 0; i < 3; i++)
     {
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
