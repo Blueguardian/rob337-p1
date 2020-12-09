@@ -140,6 +140,7 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
   goal_target.target_pose.pose.orientation.x = rotation.getX();
   goal_target.target_pose.pose.orientation.y = rotation.getY();
   goal_target.target_pose.header.frame_id = msg->header.frame_id;
+  goal_target.target_pose.header.seq = msg->header.seq+targets.size();
   // send_goal(goal_target);
   send_marker(goal_target);
   ROS_INFO("Storing target..");
