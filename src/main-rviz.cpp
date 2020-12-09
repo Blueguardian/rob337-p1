@@ -219,7 +219,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
   MoveBaseClient ac1("move_base", true);
 
   if (((fabs(angles_recieved.at(iter)) > 0) && (fabs(angles_recieved.at(iter)) < M_PI_2))) //Angle in fist quadrant
-  {                                                                                        //This means the angle can be calculated as
+  {   //This means the angle can be calculated as
     perp_line_angle = (atan(-1 / (tan(fabs(angles_recieved.at(iter))))));
   }
   else if (((fabs(angles_recieved.at(iter)) > M_PI_2) && (fabs(angles_recieved.at(iter)) < M_PI))) //Second quadrant
@@ -420,7 +420,4 @@ double rob_facing_angle(double angle)
   }
   return oppositeangle;
 }
-double angle_according(double step, double n_step)
-{
-  return atan((step * n_step) / 0.5);
-}
+
