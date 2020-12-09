@@ -33,6 +33,8 @@ double euclidianDist(double x1, double y1, double refx, double refy);
 void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter);
 void user_input_cb(const std_msgs::Char::ConstPtr &msg);
 double rob_facing_angle(double angle);
+double angle_according(double step, double n_step);
+
 
 int main(int argc, char **argv)
 {
@@ -213,108 +215,150 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
   MoveBaseClient ac1("move_base", true);
 
   if (((fabs(angles_recieved.at(iter)) > 0) && (fabs(angles_recieved.at(iter)) < M_PI_2))) //Angle in fist quadrant
-  {                                                                                        //This means the angle can be calculated as
-    perp_line_angle = fabs(atan(-1 / (tan(fabs(angles_recieved.at(iter))))));
+  {                                                    //This means the angle can be calculated as
+    perp_line_angle = (atan(-1 / (tan(fabs(angles_recieved.at(iter))))));
   }
   else if (((fabs(angles_recieved.at(iter)) > M_PI_2) && (fabs(angles_recieved.at(iter)) < M_PI))) //Second quadrant
   {
-    perp_line_angle = fabs(atan(-1 / (tan(fabs(angles_recieved.at(iter) - M_PI)))));
+    perp_line_angle = (atan(-1 / (tan(fabs(angles_recieved.at(iter) - M_PI)))));
   }
   else if (((fabs(angles_recieved.at(iter)) > M_PI) && (fabs(angles_recieved.at(iter)) < (2 * M_PI * (3 / 4))))) //Angle in third quadrant
   {
-    perp_line_angle = fabs(atan(-1 / (tan(fabs(angles_recieved.at(iter) - M_PI)))));
+    perp_line_angle = (atan(-1 / (tan(fabs(angles_recieved.at(iter) - M_PI)))));
   }
   else if ((((fabs(angles_recieved.at(iter)) > (2 * M_PI * (3 / 4)))) && (fabs(angles_recieved.at(iter)) < (2 * M_PI)))) //Angle in fourth quadrant
   {
-    perp_line_angle = fabs(atan(-1 / (tan(fabs(angles_recieved.at(iter) - (2 * M_PI))))));
+    perp_line_angle = (atan(-1 / (tan(fabs(angles_recieved.at(iter) - (2 * M_PI))))));
   }
 
   //We now do calculations which we assign to the datatype goal (x,y and z) in order for the robot to move right/left at the exhibit and take an image.
 
   if (((fabs(angles_recieved.at(iter)) < 0.01) && (fabs(angles_recieved.at(iter)) > (2 * M_PI - 0.01))) || ((fabs(angles_recieved.at(iter)) < (M_PI + 0.01)) && (fabs(angles_recieved.at(iter)) > (M_PI - 0.01))))
-  //The robot has its direction facing 0 or 180 degrees, and only its increments are defines as following:
+  //The robot has its direction facing 0 or 180 degrees, and only its increments are defined as following:
   {
-    increment_x = step;
-    increment_y = 0;
-    for (int i = 0; i < 3; i++)
-    {
-      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
-      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
-      ac1.sendGoalAndWait(goal);
-    }
-    goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
-    goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
-    for (int i = 0; i < 3; i++)
-    {
-      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
-      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
-      ac1.sendGoalAndWait(goal);
-    }
-    skip = true;
-  }
-
-  else if (((fabs(angles_recieved.at(iter)) < (M_PI_2 + 0.01)) && (fabs(angles_recieved.at(iter)) > (M_PI_2 - 0.01))) || ((fabs(angles_recieved.at(iter)) < (((3 / 4) * 2 * M_PI) + 0.01)) && (fabs(angles_recieved.at(iter)) > (((3 / 4) * 2 * M_PI) - 0.01)))) //If cos(angle) = apprx. 1 //6.28 = ca. 2*Pi
-  {                                                                                                                                                                                                                                                              //The robot has its direction 90 or 270 degrees
     increment_x = 0;
     increment_y = step;
     for (int i = 0; i < 3; i++)
     {
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
+      goal.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z + angle_according(step, i+1);
       ac1.sendGoalAndWait(goal);
     }
     goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
     goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+    goal.target_pose.pose.orientation.z = tmp_location.target_pose.pose.orientation.z;
     for (int i = 0; i < 3; i++)
     {
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
+      goal.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z - angle_according(step, i+1);
+      ac1.sendGoalAndWait(goal);
+    }
+    skip = true;
+  }
+
+  else if (((fabs(angles_recieved.at(iter)) < (M_PI_2 + 0.01)) && (fabs(angles_recieved.at(iter)) > (M_PI_2 - 0.01))) || ((fabs(angles_recieved.at(iter)) < (((3 / 4) * 2 * M_PI) + 0.01)) && (fabs(angles_recieved.at(iter)) > (((3 / 4) * 2 * M_PI) - 0.01)))) 
+  {  //The robot has its direction 90 or 270 degrees
+    increment_x = step;
+    increment_y = 0;
+    for (int i = 0; i < 3; i++)
+    {
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
+      goal.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z + angle_according(step, i+1);
+      ac1.sendGoalAndWait(goal);
+    }
+    goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
+    goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+    goal.target_pose.pose.orientation.z = tmp_location.target_pose.pose.orientation.z;
+    for (int i = 0; i < 3; i++)
+    {
+      goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
+      goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
+      goal.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z - angle_according(step, i+1);
       ac1.sendGoalAndWait(goal);
     }
     skip = true;
   }
   else //The robot is facing somewhere between - calculations for steps required!
   {
-    increment_x = step * cos(perp_line_angle);
-    increment_y = step * sin(perp_line_angle);
+    increment_x = step * cos(fabs(perp_line_angle));
+    increment_y = step * sin(fabs(perp_line_angle));
   }
 
-  if (((perp_line_angle > 0) && (perp_line_angle < M_PI_2) && (skip == false)) || (((perp_line_angle > M_PI) && (perp_line_angle < (2 * M_PI * (3 / 4)))) && (skip == false))) //Robot facing either first or third quadrant
-  {
+  if (((perp_line_angle > 0) && (skip == false))) //Robot facing either first or third quadrant, as perp_line_angle is positive
+  { 
     for (int i = 0; i < 3; i++)
     { //We make the robot move 3 steps to the right, in which it faces the exhibits
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
+      if((fabs(angles_recieved.at(iter))) > 0 && (fabs(angles_recieved.at(iter)) < M_PI_2))  //The robot is facing first quadrant
+      { 
+      goal.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z + angle_according(step, i+1); 
+      }
+      else 
+      {
+      goal.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z - angle_according(step, i+1);
+      }
       ac1.sendGoalAndWait(goal);
     }
     goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
     goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+    goal.target_pose.pose.orientation.z = tmp_location.target_pose.pose.orientation.z;
     for (int i = 0; i < 3; i++)
     { //We make the robot move 3 steps to the right, in which it faces the exhibits
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
+      if((fabs(angles_recieved.at(iter))) > 0 && (fabs(angles_recieved.at(iter)) < M_PI_2))
+      { 
+      goal.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z - angle_according(step, i+1); 
+      }
+      else 
+      {
+      goal.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z + angle_according(step, i+1);
+      }
       ac1.sendGoalAndWait(goal);
     }
   }
-  else if (skip == false)
+  else if ((perp_line_angle < 0) && skip == false) //Either second or fourth quadrant, thus negative perp_line_angle
   {
     for (int i = 0; i < 3; i++)
     {
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
+      if((fabs(angles_recieved.at(iter))) > M_PI_2 && (fabs(angles_recieved.at(iter)) < M_PI)) //facing second quadrant
+      { 
+      goal.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z + angle_according(step, i+1); 
+      }
+      else 
+      {
+      goal.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z - angle_according(step, i+1);
+      }      
       ac1.sendGoalAndWait(goal);
     }
     goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
     goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+    goal.target_pose.pose.orientation.z = tmp_location.target_pose.pose.orientation.z;
     for (int i = 0; i < 3; i++)
     {
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
+      if((fabs(angles_recieved.at(iter))) > M_PI_2 && (fabs(angles_recieved.at(iter)) < M_PI)) //facing second quadrant
+      { 
+      goal.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z - angle_according(step, i+1); 
+      }
+      else 
+      {
+      goal.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z + angle_according(step, i+1);
+      }      
       ac1.sendGoalAndWait(goal);
     }
   }
   goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
   goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
+  goal.target_pose.pose.orientation.z = tmp_location.target_pose.pose.orientation.z;
+
   ac1.sendGoalAndWait(goal);
 }
 
@@ -377,4 +421,9 @@ double rob_facing_angle(double angle)
     oppositeangle = angle - M_PI;
   }
   return oppositeangle;
+
+}
+double angle_according(double step, double n_step)
+{
+  return atan((step*n_step)/0.5);
 }
