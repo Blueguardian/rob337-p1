@@ -14,6 +14,7 @@
 #include "tf/transform_datatypes.h"
 #include <vector>
 
+
 ros::NodeHandle *ptrnh;
 std::vector<move_base_msgs::MoveBaseGoal> targets;
 std::vector<double> angles_recieved;
