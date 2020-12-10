@@ -105,6 +105,7 @@ int main(int argc, char **argv)
       start = 0;
     }
     ros::spinOnce();
+    start = 0;
   }
   return 0; //Program run succesfully.
 }
@@ -235,7 +236,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
   ros::Rate sleep(1);
 
   //We define how many meters the robot must move each step while re-locating
-  double step = 0.3;
+  double step = 0.15;
   double perp_line_angle = 0; //Calculation of perpendicular angle, used in increment
   double increment_x = 0;
   double increment_y = 0;
