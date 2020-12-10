@@ -45,6 +45,8 @@ int main(int argc, char **argv)
       {
         user_input.publish(begin);
         ros::Duration(5);
+        begin.data = 0;
+        confirm = 0;
       }
       else
       {
