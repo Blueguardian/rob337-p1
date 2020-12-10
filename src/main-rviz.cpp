@@ -102,6 +102,7 @@ int main(int argc, char **argv)
       markers.markers.shrink_to_fit();
       i = 0;
       loop.sleep();
+      start = 0;
     }
     ros::spinOnce();
   }
