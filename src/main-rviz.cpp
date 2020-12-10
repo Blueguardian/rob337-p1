@@ -43,7 +43,6 @@ int main(int argc, char **argv)
   ptrnh = &nh2;
 
   ros::Subscriber user_input = nh2.subscribe("new_exhibit", 1, userInterface_cb); // Subscribes to the user_input topic and when it receives a messege it runs the callback function
-  ros::Publisher base_state_pub = nh2.advertise<std_msgs::Bool>("base_state", 5); //Creating a publisher for publishing the state of the MoveBaseClient
   ros::Subscriber input = nh2.subscribe("userinput", 10, user_input_cb);
 
   MoveBaseClient ac("move_base", true); //Defining a client to send goals to the move_base server.
@@ -82,6 +81,7 @@ int main(int argc, char **argv)
         ROS_INFO("Cancelling goals.. \n Stopping loop..");
         ac.cancelAllGoals();
         ros::Duration(3);
+        start = 0;
       }
       i++;
       ros::spinOnce();
@@ -113,14 +113,7 @@ int main(int argc, char **argv)
 void _goal_reached_cb(const actionlib::SimpleClientGoalState &state, const move_base_msgs::MoveBaseResult::ConstPtr &result)
 {
   ROS_INFO("The goal has succesfully been reached!");
-  ros::Publisher take_picture = ptrnh->advertise<std_msgs::Bool>("/takepicture", 1);
-  std_msgs::Bool msg;
-  msg.data = true;
-  take_picture.publish(msg);
-  ros::Rate sleep(0.7);
-  sleep.sleep();
-  msg.data = false;
-  take_picture.publish(msg);
+  ros::Duration(1);
 }
 
 void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
