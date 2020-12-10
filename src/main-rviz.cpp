@@ -63,6 +63,7 @@ int main(int argc, char **argv)
         sortCoord(i, targets.size(), 0, 0);
         ROS_INFO("Sending 1. goal");
         send_goal(targets[i], i);
+        loop.sleep();
       }
       else
       {
@@ -74,13 +75,13 @@ int main(int argc, char **argv)
         sortCoord(i, targets.size(), targets[i - 1].target_pose.pose.position.x, targets[i - 1].target_pose.pose.position.y);
         ROS_INFO("Sending %d. goal", i + 1);
         send_goal(targets[i], i);
+        loop.sleep();
       }
       if (start == 'q')
       {
-        ROS_INFO("Cancelling goals..");
+        ROS_INFO("Cancelling goals.. \n Stopping loop..");
         ac.cancelAllGoals();
-        ROS_INFO("Shutting down..");
-        ros::shutdown();
+        ros::Duration(3);
       }
       i++;
       ros::spinOnce();
@@ -89,6 +90,17 @@ int main(int argc, char **argv)
     {
       ROS_INFO("Shutting down..");
       ros::shutdown();
+    }
+    else if(start == 'r')
+    {
+      ROS_INFO("Clearing all data..");
+      angles_recieved.clear();
+      angles_recieved.shrink_to_fit();
+      targets.clear();
+      targets.shrink_to_fit();
+      markers.markers.clear();
+      markers.markers.shrink_to_fit();
+      loop.sleep();
     }
     ros::spinOnce();
   }
@@ -113,6 +125,8 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
   ROS_INFO("Stored coordinates: [x: %f, y: %f, z: %f]", msg->pose.position.x, msg->pose.position.x, msg->pose.orientation.z); //For testing and errorhandling
   move_base_msgs::MoveBaseGoal goal_target;
   tf2::Quaternion rotation;
+  tf2::Vector3 temp_stor;
+  ros::Rate rate(5);
 
   ROS_INFO("Calculating goal position..."); //Testing purposes
 
@@ -128,19 +142,21 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
   ROS_INFO("Inverting rotation..");
 
   goal_target.target_pose.pose.orientation.z = rotation.getAngle();
+  temp_stor = rotation.getAxis();
   goal_target = get_dif2Dgoal(goal_target);
-  rotation.setEulerZYX(rob_facing_angle(rotation.getAngle()), 0 ,0);
+  rotation.setRotation(temp_stor, rob_facing_angle(rotation.getAngle()));
+  rate.sleep();
   angles_recieved.push_back(rob_facing_angle(rotation.getAngle()));
-  rotation.normalize();
 
   goal_target.target_pose.pose.orientation.z = rotation.getZ();
   goal_target.target_pose.pose.orientation.w = rotation.getW();
   goal_target.target_pose.pose.orientation.x = rotation.getX();
   goal_target.target_pose.pose.orientation.y = rotation.getY();
+  rate.sleep();
   goal_target.target_pose.header.frame_id = msg->header.frame_id;
   goal_target.target_pose.header.seq = msg->header.seq+targets.size();
-  // send_goal(goal_target);
   send_marker(goal_target);
+  rate.sleep();
   ROS_INFO("Storing target..");
   targets.push_back(goal_target);
 }
@@ -148,13 +164,17 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 void send_goal(move_base_msgs::MoveBaseGoal goal_point, int i)
 {
   MoveBaseClient ac("move_base", true);
+  ros::Rate rate(5);
   ac.sendGoal(goal_point, _goal_reached_cb);
+  rate.sleep();
   ROS_INFO("Sending goal and markers..");
   ros::Publisher marker_pub = ptrnh->advertise<visualization_msgs::MarkerArray>("visualization_marker", 1);
   marker_pub.publish(markers);
+  rate.sleep();
   markers.markers.erase(markers.markers.begin() + i);
   ac.waitForResult();
   ROS_INFO("Performing scan of exhibition...");
+  rate.sleep();
   exhib_scan(goal_point, i);
 }
 
@@ -167,9 +187,9 @@ void send_marker(move_base_msgs::MoveBaseGoal goal)
   marker.ns = "target_point";
   marker.type = visualization_msgs::Marker::ARROW;
   marker.action = visualization_msgs::Marker::ADD;
-  marker.scale.x = 1.0;
-  marker.scale.y = 0.2;
-  marker.scale.z = 0.2;
+  marker.scale.x = 1.5;
+  marker.scale.y = 0.5;
+  marker.scale.z = 0.5;
   marker.color.r = 0.1;
   marker.color.g = 0.1;
   marker.color.b = 1.0;
@@ -311,6 +331,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
       goal.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z - angle_according(step, i+1);
       }
       ac1.sendGoalAndWait(goal);
+      sleep.sleep();
     }
     goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
     goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
@@ -328,6 +349,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
       goal.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z + angle_according(step, i+1);
       }
       ac1.sendGoalAndWait(goal);
+      sleep.sleep();
     }
   }
   else if ((perp_line_angle < 0) && skip == false) //Either second or fourth quadrant, thus negative perp_line_angle
@@ -345,6 +367,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
       goal.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z - angle_according(step, i+1);
       }      
       ac1.sendGoalAndWait(goal);
+      sleep.sleep();
     }
     goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
     goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
@@ -362,6 +385,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
       goal.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z + angle_according(step, i+1);
       }      
       ac1.sendGoalAndWait(goal);
+      sleep.sleep();
     }
   }
   goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
@@ -369,6 +393,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
   goal.target_pose.pose.orientation.z = tmp_location.target_pose.pose.orientation.z;
 
   ac1.sendGoalAndWait(goal);
+  sleep.sleep();
 }
 
 void sortCoord(int startpos, int itera, double refx, double refy)

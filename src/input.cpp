@@ -14,6 +14,7 @@ int main(int argc, char **argv)
   {
     std_msgs::Char begin;
     std::cin >> begin.data;
+    char confirm;
     if (begin.data == 't')
     {
       ROS_INFO("You sent the command to start the robot");
@@ -21,10 +22,35 @@ int main(int argc, char **argv)
     }
     else if (begin.data == 'q')
     {
-      ROS_WARN("You sent the command to terminate ros");
-      user_input.publish(begin);
-      ros::Duration(5);
-      ros::shutdown();
+      ROS_WARN("Are you sure you want to terminate? (y/n)");
+      confirm = getchar();
+      if (confirm == 'y')
+      {
+        ROS_WARN("Terminating...");
+        user_input.publish(begin);
+        ros::Duration(5);
+        ros::shutdown();
+      }
+      else
+      {
+        confirm = 0;
+        begin.data = 0;
+      }
+    }
+    else if (begin.data == 'r')
+    {
+      ROS_WARN("Are you sure you want to reset? \n This means that all exhibits previously inserted goals will be deleted");
+      confirm = getchar();
+      if (confirm == 'y')
+      {
+        user_input.publish(begin);
+        ros::Duration(5);
+      }
+      else
+      {
+        begin.data = 0;
+        confirm = 0;
+      }
     }
     else
     {
