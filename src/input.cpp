@@ -59,8 +59,3 @@ int main(int argc, char **argv)
   }
   return 0;
 }
-
-void terminate_cb(const std_msgs::Char::ConstPtr &msg)
-{
-  ros::shutdown();
-}
