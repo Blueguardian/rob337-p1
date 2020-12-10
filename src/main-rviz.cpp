@@ -208,8 +208,8 @@ void send_marker(move_base_msgs::MoveBaseGoal goal)
 
 void get_dif2Dgoal(move_base_msgs::MoveBaseGoal (*goal))
 {
-  double dif_x = 0.5 * cos(goal->target_pose.pose.orientation.z);
-  double dif_y = 0.5 * sin(goal->target_pose.pose.orientation.z);
+  double dif_x = cos(goal->target_pose.pose.orientation.z);
+  double dif_y = sin(goal->target_pose.pose.orientation.z);
 
   move_base_msgs::MoveBaseGoal goal_target;
   goal_target.target_pose.pose.orientation.z = goal->target_pose.pose.orientation.z;
