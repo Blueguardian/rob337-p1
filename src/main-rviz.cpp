@@ -58,7 +58,6 @@ int main(int argc, char **argv)
     {
       if (i == 0)
       {
-        ROS_INFO("Sorting targets for closest target...");
         sortCoord(i, targets.size(), 0, 0);
         ROS_INFO("Sending 1. goal");
         send_goal(targets[i], i);
@@ -70,7 +69,6 @@ int main(int argc, char **argv)
         {
           targets[i].target_pose.header.seq = targets[i].target_pose.header.seq-1;
         }
-        ROS_INFO("Sorting targets for closest target...");
         sortCoord(i, targets.size(), targets[i - 1].target_pose.pose.position.x, targets[i - 1].target_pose.pose.position.y);
         ROS_INFO("Sending %d. goal", i + 1);
         send_goal(targets[i], i);
@@ -111,19 +109,15 @@ int main(int argc, char **argv)
 
 void _goal_reached_cb(const actionlib::SimpleClientGoalState &state, const move_base_msgs::MoveBaseResult::ConstPtr &result)
 {
-  ROS_INFO("The goal has succesfully been reached!");
   ros::Duration(1);
 }
 
 void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
-  ROS_INFO("Stored coordinates: [x: %f, y: %f, z: %f]", msg->pose.position.x, msg->pose.position.x, msg->pose.orientation.z); //For testing and errorhandling
   move_base_msgs::MoveBaseGoal goal_target;
   tf2::Quaternion rotation;
   tf2::Vector3 temp_stor;
   ros::Rate rate(5);
-
-  ROS_INFO("Calculating goal position..."); //Testing purposes
 
   goal_target.target_pose.pose.position.x = msg->pose.position.x;
   goal_target.target_pose.pose.position.y = msg->pose.position.y;
@@ -134,14 +128,11 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
   rotation.setZ(msg->pose.orientation.z);
   rotation.setW(msg->pose.orientation.w);
 
-  ROS_INFO("Inverting rotation..");
-
   goal_target.target_pose.pose.orientation.z = rotation.getAngle();
   temp_stor = rotation.getAxis();
   get_dif2Dgoal(&goal_target);
-  ROS_INFO("Angle recieved [x: %f, y: %f, z: %f, w: %f], angle in quaternion: [x: %f, y: %f, z: %f, w: %f] corresponding to angle: %f", msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z, msg->pose.orientation.w, rotation.getX(), rotation.getY(), rotation.getZ(), rotation.getW(), rotation.getAngle());
   rotation.setRotation(temp_stor, rob_facing_angle(rotation.getAngle()));
-  ROS_INFO("Reversed angle: [x: %f, y: %f, z: %f, w: %f] corresponding to angle: %f", rotation.getX(), rotation.getY(), rotation.getZ(), rotation.getW(), rotation.getAngle());
+  
   rate.sleep();
   angles_recieved.push_back(rob_facing_angle(rotation.getAngle()));
 
@@ -177,8 +168,6 @@ void send_goal(move_base_msgs::MoveBaseGoal goal_point, int i)
 
 void send_marker(move_base_msgs::MoveBaseGoal goal)
 {
-  //  ros::Publisher marker_pub;
-  //  marker_pub = ptrnh->advertise<visualization_msgs::MarkerArray>("exhibit_markers", 1);
   visualization_msgs::Marker marker;
   ros::Publisher marker_pub = ptrnh->advertise<visualization_msgs::MarkerArray>("visualization_marker", 1);
   marker.header.stamp = ros::Time::now();
@@ -203,7 +192,6 @@ void send_marker(move_base_msgs::MoveBaseGoal goal)
   marker.pose.position.z += marker.scale.x;
   marker.header.stamp = ros::Time();
   markers.markers.push_back(marker);
-  ROS_INFO("Storing marker for publishing"); //For testing purposes.
   id++;
   marker_pub.publish(markers);
 }
@@ -349,6 +337,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
   goal.target_pose.pose.orientation.z = tmp_location.target_pose.pose.orientation.z;
 
   ac1.sendGoalAndWait(goal);
+  ROS_INFO("Exhibit scanned!..");
 }
 
 void sortCoord(int startpos, int itera, double refx, double refy)
@@ -358,20 +347,11 @@ void sortCoord(int startpos, int itera, double refx, double refy)
   //to compare them by their euclidian distance. It then switches the sets if the former set is smaller than the latter.
 
   //beginning of function
-  ROS_INFO("Sorting started!...");
 
   for (int i = startpos; i < itera; i++) //iterator for the first coordinateset
   {
     if ((euclidianDist(targets[startpos].target_pose.pose.position.x, targets[startpos].target_pose.pose.position.y, refx, refy) > (euclidianDist(targets[i].target_pose.pose.position.x, targets[i].target_pose.pose.position.y, refx, refy))))
     {
-      //switches the places of the coordinateset if it's smaller.
-      //ROS_INFO("Switching!"); //
-      //move_base_msgs::MoveBaseGoal temp;
-      //temp = target[startpos];
-      //ROS_INFO("Switching [x: %f, y: %f, z: %f] with [x: %f, y: %f, z: %f]", temp.target_pose.pose.position.x, temp.target_pose.pose.position.y, temp.target_pose.pose.position.z, target[i].target_pose.pose.position.x, target[i].target_pose.pose.position.y, target[i].target_pose.pose.position.z);
-      //target[startpos] = target[i];
-      //target[i] = temp;
-      //std::swap(target[startpos], target[i]);
       move_base_msgs::MoveBaseGoal temp;
       temp.target_pose.pose.position.x = targets[startpos].target_pose.pose.position.x;
       temp.target_pose.pose.position.y = targets[startpos].target_pose.pose.position.y;

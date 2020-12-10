@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     }
     else if (begin.data == 'r')
     {
-      ROS_WARN("Are you sure you want to reset? \n This means that all exhibits previously inserted goals will be deleted");
+      ROS_WARN("Are you sure you want to reset? (y/n) \n This means that all exhibits previously inserted goals will be deleted");
       std::cin >> confirm;
       if (confirm == 'y')
       {

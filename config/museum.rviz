@@ -93,7 +93,7 @@ Visualization Manager:
     - Class: rviz/Camera
       Enabled: true
       Image Rendering: background and overlay
-      Image Topic: /camera/rgb/image_raw
+      Image Topic: /camera/rgb/image_rect_color
       Name: Camera
       Overlay Alpha: 0.5
       Queue Size: 2
@@ -199,7 +199,7 @@ Visualization Manager:
     - Class: rviz/Camera
       Enabled: true
       Image Rendering: background and overlay
-      Image Topic: /camera/depth/image_raw
+      Image Topic: /camera/depth/image_rect
       Name: Depth_Camera
       Overlay Alpha: 0.5
       Queue Size: 2
