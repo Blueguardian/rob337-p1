@@ -105,7 +105,6 @@ int main(int argc, char **argv)
       start = 0;
     }
     ros::spinOnce();
-    start = 0;
   }
   return 0; //Program run succesfully.
 }
