@@ -166,10 +166,10 @@ void send_goal(move_base_msgs::MoveBaseGoal goal_point, int i)
   rate.sleep();
   ROS_INFO("Sending goal and markers..");
   ros::Publisher marker_pub = ptrnh->advertise<visualization_msgs::MarkerArray>("visualization_marker", 1);
-  marker_pub.publish(markers);
   rate.sleep();
   markers.markers.erase(markers.markers.begin() + i);
   ac.waitForResult();
+  marker_pub.publish(markers);
   ROS_INFO("Performing scan of exhibition...");
   rate.sleep();
   exhib_scan(goal_point, i);
@@ -180,6 +180,7 @@ void send_marker(move_base_msgs::MoveBaseGoal goal)
   //  ros::Publisher marker_pub;
   //  marker_pub = ptrnh->advertise<visualization_msgs::MarkerArray>("exhibit_markers", 1);
   visualization_msgs::Marker marker;
+  ros::Publisher marker_pub = ptrnh->advertise<visualization_msgs::MarkerArray>("visualization_marker", 1);
   marker.header.stamp = ros::Time::now();
   marker.ns = "target_point";
   marker.type = visualization_msgs::Marker::ARROW;
@@ -204,6 +205,7 @@ void send_marker(move_base_msgs::MoveBaseGoal goal)
   markers.markers.push_back(marker);
   ROS_INFO("Storing marker for publishing"); //For testing purposes.
   id++;
+  marker_pub.publish(markers);
 }
 
 void get_dif2Dgoal(move_base_msgs::MoveBaseGoal (*goal))
