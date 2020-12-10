@@ -100,6 +100,7 @@ int main(int argc, char **argv)
       targets.shrink_to_fit();
       markers.markers.clear();
       markers.markers.shrink_to_fit();
+      i = 0;
       loop.sleep();
     }
     ros::spinOnce();
