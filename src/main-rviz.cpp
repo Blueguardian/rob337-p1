@@ -27,7 +27,7 @@ void goal_reached_cb(const actionlib::SimpleClientGoalState &state, const move_b
 void send_goal(move_base_msgs::MoveBaseGoal goal_point, int i);                                                              //Send goal to move_base server
 void send_marker(move_base_msgs::MoveBaseGoal goal);
 double rob_facing_angle(double angle);
-move_base_msgs::MoveBaseGoal get_dif2Dgoal(move_base_msgs::MoveBaseGoal goal);
+void get_dif2Dgoal(move_base_msgs::MoveBaseGoal (*goal));
 void sortCoord(int startpos, int itera, double refx, double refy);
 double euclidianDist(double x1, double y1, double refx, double refy);
 void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter);
@@ -144,7 +144,7 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
   goal_target.target_pose.pose.orientation.z = rotation.getAngle();
   temp_stor = rotation.getAxis();
-  goal_target = get_dif2Dgoal(goal_target);
+  get_dif2Dgoal(&goal_target);
   ROS_INFO("Angle recieved [x: %f, y: %f, z: %f, w: %f], angle in quaternion: [x: %f, y: %f, z: %f, w: %f] corresponding to angle: %f", msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z, msg->pose.orientation.w, rotation.getX(), rotation.getY(), rotation.getZ(), rotation.getW(), rotation.getAngle());
   rotation.setRotation(temp_stor, rob_facing_angle(rotation.getAngle()));
   ROS_INFO("Reversed angle: [x: %f, y: %f, z: %f, w: %f] corresponding to angle: %f", rotation.getX(), rotation.getY(), rotation.getZ(), rotation.getW(), rotation.getAngle());
@@ -212,17 +212,16 @@ void send_marker(move_base_msgs::MoveBaseGoal goal)
   id++;
 }
 
-move_base_msgs::MoveBaseGoal get_dif2Dgoal(move_base_msgs::MoveBaseGoal goal)
+void get_dif2Dgoal(move_base_msgs::MoveBaseGoal (*goal))
 {
-  double dif_x = 0.5 * cos(goal.target_pose.pose.orientation.z);
-  double dif_y = 0.5 * sin(goal.target_pose.pose.orientation.z);
+  double dif_x = 0.5 * cos(goal->target_pose.pose.orientation.z);
+  double dif_y = 0.5 * sin(goal->target_pose.pose.orientation.z);
 
   move_base_msgs::MoveBaseGoal goal_target;
-  goal_target.target_pose.pose.orientation.z = goal.target_pose.pose.orientation.z;
-  goal_target.target_pose.pose.position.x = goal.target_pose.pose.position.x - dif_x;
-  goal_target.target_pose.pose.position.y = goal.target_pose.pose.position.y - dif_y;
+  goal_target.target_pose.pose.orientation.z = goal->target_pose.pose.orientation.z;
+  goal_target.target_pose.pose.position.x = goal->target_pose.pose.position.x - dif_x;
+  goal_target.target_pose.pose.position.y = goal->target_pose.pose.position.y - dif_y;
 
-  return goal_target;
 }
 
 void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)

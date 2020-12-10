@@ -19,6 +19,8 @@ int main(int argc, char **argv)
     {
       ROS_INFO("You sent the command to start the robot");
       user_input.publish(begin);
+      confirm = 0;
+      begin.data = 0;
     }
     else if (begin.data == 'q')
     {
