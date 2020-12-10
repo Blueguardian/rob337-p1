@@ -145,7 +145,9 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
   goal_target.target_pose.pose.orientation.z = rotation.getAngle();
   temp_stor = rotation.getAxis();
   goal_target = get_dif2Dgoal(goal_target);
+  ROS_INFO("Angle recieved [x: %f, y: %f, z: %f, w: %f], angle in quaternion: [x: %f, y: %f, z: %f, w: %f] corresponding to angle: %f", msg->pose.orientation.x, msg->pose.orientation.y, msg->pose.orientation.z, msg->pose.orientation.w, rotation.getX(), rotation.getY(), rotation.getZ(), rotation.getW(), rotation.getAngle());
   rotation.setRotation(temp_stor, rob_facing_angle(rotation.getAngle()));
+  ROS_INFO("Reversed angle: [x: %f, y: %f, z: %f, w: %f] corresponding to angle: %f", rotation.getX(), rotation.getY(), rotation.getZ(), rotation.getW(), rotation.getAngle());
   rate.sleep();
   angles_recieved.push_back(rob_facing_angle(rotation.getAngle()));
 

@@ -23,7 +23,7 @@ int main(int argc, char **argv)
     else if (begin.data == 'q')
     {
       ROS_WARN("Are you sure you want to terminate? (y/n)");
-      confirm = getchar();
+      std::cin >> confirm;
       if (confirm == 'y')
       {
         ROS_WARN("Terminating...");
@@ -40,7 +40,7 @@ int main(int argc, char **argv)
     else if (begin.data == 'r')
     {
       ROS_WARN("Are you sure you want to reset? \n This means that all exhibits previously inserted goals will be deleted");
-      confirm = getchar();
+      std::cin >> confirm;
       if (confirm == 'y')
       {
         user_input.publish(begin);
