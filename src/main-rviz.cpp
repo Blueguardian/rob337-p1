@@ -131,12 +131,13 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
   goal_target.target_pose.pose.orientation.z = rotation.getAngle();
   temp_stor = rotation.getAxis();
-
+/*
   double dif_x = 0.75 * cos(goal_target.target_pose.pose.orientation.z);
   double dif_y = 0.75 * sin(goal_target.target_pose.pose.orientation.z);
   goal_target.target_pose.pose.position.x = goal_target.target_pose.pose.position.x + dif_x;
   goal_target.target_pose.pose.position.y = goal_target.target_pose.pose.position.y + dif_y;
-
+*/
+  get_dif2Dgoal(&goal_target);
   rotation.setRotation(temp_stor, rob_facing_angle(rotation.getAngle()));
 
   rate.sleep();
