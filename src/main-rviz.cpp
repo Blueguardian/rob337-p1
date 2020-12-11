@@ -200,10 +200,9 @@ void get_dif2Dgoal(move_base_msgs::MoveBaseGoal (*goal))
   double dif_x = 1.5*cos(goal->target_pose.pose.orientation.z);
   double dif_y = 1.5*sin(goal->target_pose.pose.orientation.z);
 
-  move_base_msgs::MoveBaseGoal goal_target;
-  goal_target.target_pose.pose.orientation.z = goal->target_pose.pose.orientation.z;
-  goal_target.target_pose.pose.position.x = goal->target_pose.pose.position.x - dif_x;
-  goal_target.target_pose.pose.position.y = goal->target_pose.pose.position.y - dif_y;
+  goal->target_pose.pose.orientation.z = goal->target_pose.pose.orientation.z;
+  goal->target_pose.pose.position.x = ((goal->target_pose.pose.position.x) - dif_x);
+  goal->target_pose.pose.position.y = ((goal->target_pose.pose.position.y) - dif_y);
 
 }
 
