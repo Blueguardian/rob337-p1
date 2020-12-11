@@ -172,9 +172,9 @@ void send_marker(move_base_msgs::MoveBaseGoal goal)
   marker.ns = "target_point";
   marker.type = visualization_msgs::Marker::ARROW;
   marker.action = visualization_msgs::Marker::ADD;
-  marker.scale.x = 0.5;
-  marker.scale.y = 0.2;
-  marker.scale.z = 0.2;
+  marker.scale.x = 1.5;
+  marker.scale.y = 0.5;
+  marker.scale.z = 0.5;
   marker.color.r = 0.1;
   marker.color.g = 0.1;
   marker.color.b = 1.0;
