@@ -50,6 +50,13 @@ int main(int argc, char **argv)
         begin.data = 0;
         confirm = 0;
       }
+      else if(begin.data == 'a')
+      {
+        ROS_INFO("You sent the command to abort current goals");
+        user_input.publish(begin);
+        ros::Duration(1);
+        begin.data = 0;
+      }
       else
       {
         begin.data = 0;

@@ -1,4 +1,12 @@
 <launch>
+   <rosparam file="$(find rob337-p1)/param/costmap_common_param_rviz.yaml" command="load" ns="global_costmap"/>
+   <rosparam file="$(find rob337-p1)/param/costmap_common_param_rviz.yaml" command="load" ns="local_costmap"/>
+   <rosparam file="$(find rob337-p1)/param/local_costmap_param_rviz.yaml" command="load"/>
+   <rosparam file="$(find rob337-p1)/param/global_costmap_param_rviz.yaml" command="load"/>
+   <rosparam file="$(find rob337-p1)/param/dwa_costmap_param_rviz.yaml" command="load"/>
+
+   ros::Duration(2.0).sleep();
+
    <arg name="3d_sensor" default="$(env TURTLEBOT_3D_SENSOR)"/>
    <include file="$(find turtlebot_bringup)/launch/minimal.launch"></include><!--Unsure if this is needed-->
    <include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
@@ -26,14 +34,6 @@
 
    ros::Duration(2.0).sleep();
 
-   <arg name="custom_gmapping_launch_file" default="$(find turtlebot_navigation)/launch/includes/gmapping/$(arg 3d_sensor)_gmapping.launch.xml"/>
    <include file="$(find turtlebot_navigation)/launch/includes/move_base.launch.xml"/>
    <param name="controller_frequency" value="10.0"/>
-   <rosparam file="$(find rob337-p1)/param/costmap_common_param_rviz.yaml" command="load" ns="global_costmap"/>
-   <rosparam file="$(find rob337-p1)/param/costmap_common_param_rviz.yaml" command="load" ns="local_costmap"/>
-   <rosparam file="$(find rob337-p1)/param/local_costmap_param_rviz.yaml" command="load"/>
-   <rosparam file="$(find rob337-p1)/param/global_costmap_param_rviz.yaml" command="load"/>
-   <rosparam file="$(find rob337-p1)/param/dwa_costmap_param_rviz.yaml" command="load"/>
-   <!--<node pkg="tf" type="static_transform_publisher" name="base_link_broadcaster" args="0 0 0 0 0 0 odom base_link 100"></node>
-   <node pkg="tf" type="static_transform_publisher" name="base_footprint_broadcaster" args="0 0 0 0 0 0 base_link base_footprint 100"></node>-->
 </launch>
