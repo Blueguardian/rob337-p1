@@ -19,7 +19,7 @@ std::vector<move_base_msgs::MoveBaseGoal> targets;
 std::vector<double> angles_recieved;
 visualization_msgs::MarkerArray markers;
 int start = 0;
-int id = 0;
+int id = 1;
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg);                                                      //Prints messeges containing the received coordinates                                                             //Prints messeges containing the received coordinates
@@ -54,7 +54,7 @@ int main(int argc, char **argv)
   while (ros::ok()) //while(!= ros::Shutdown(); or the user has Ctrl+C out of the program.)
   {
  
-    while (start == 't' && i < targets.size())
+    while (start == 't' || start == 'a' && i < targets.size())
     {
       if (i == 0)
       {
@@ -74,12 +74,13 @@ int main(int argc, char **argv)
         send_goal(targets[i], i);
         loop.sleep();
       }
-      if (start == 'q')
+      if (start == 'a')
       {
         ROS_INFO("Cancelling goals.. \n Stopping loop..");
         ac.cancelAllGoals();
         ros::Duration(3);
         start = 0;
+        ros::Duration(1);
       }
       i++;
       ros::spinOnce();
@@ -155,54 +156,22 @@ void send_goal(move_base_msgs::MoveBaseGoal goal_point, int i)
   ros::Rate rate(5);
   ac.sendGoal(goal_point, _goal_reached_cb);
   rate.sleep();
-  ROS_INFO("Sending goal and markers..");
-  ros::Publisher marker_pub = ptrnh->advertise<visualization_msgs::MarkerArray>("visualization_marker", 1);
+  ROS_INFO("Sending goal..");
   rate.sleep();
   ac.waitForResult();
   ROS_INFO("Performing scan of exhibition...");
   rate.sleep();
   exhib_scan(goal_point, i);
 }
-
-void send_marker(move_base_msgs::MoveBaseGoal goal)
-{
-  visualization_msgs::Marker marker;
-  ros::Publisher marker_pub = ptrnh->advertise<visualization_msgs::MarkerArray>("visualization_marker", 1);
-  marker.header.stamp = ros::Time::now();
-  marker.ns = "target_point";
-  marker.type = visualization_msgs::Marker::ARROW;
-  marker.action = visualization_msgs::Marker::ADD;
-  marker.scale.x = 1;
-  marker.scale.y = 0.5;
-  marker.scale.z = 0.5;
-  marker.color.r = 0.1;
-  marker.color.g = 0.1;
-  marker.color.b = 1.0;
-  marker.color.a = 1.0;
-  marker.pose.orientation.x = 0;
-  marker.pose.orientation.y = 0.7071;
-  marker.pose.orientation.z = 0;
-  marker.pose.orientation.w = 0.7071;
-  marker.lifetime = ros::Duration();
-  marker.header.frame_id = "map";
-  marker.id = id;
-  marker.pose.position = goal.target_pose.pose.position;
-  marker.pose.position.z = goal.target_pose.pose.position.z+0.5;
-  marker.header.stamp = ros::Time();
-  markers.markers.push_back(marker);
-  id++;
-  marker_pub.publish(markers);
-}
-
 void get_dif2Dgoal(move_base_msgs::MoveBaseGoal (*goal))
 {
   double dif_x = 1.5*cos(goal->target_pose.pose.orientation.z);
   double dif_y = 1.5*sin(goal->target_pose.pose.orientation.z);
 
   move_base_msgs::MoveBaseGoal goal_target;
-  goal_target.target_pose.pose.orientation.z = goal->target_pose.pose.orientation.z;
-  goal_target.target_pose.pose.position.x = goal->target_pose.pose.position.x - dif_x;
-  goal_target.target_pose.pose.position.y = goal->target_pose.pose.position.y - dif_y;
+  goal->target_pose.pose.orientation.z = goal->target_pose.pose.orientation.z;
+  goal->target_pose.pose.position.x = goal->target_pose.pose.position.x - dif_x;
+  goal->target_pose.pose.position.y = goal->target_pose.pose.position.y - dif_y;
 
 }
 
