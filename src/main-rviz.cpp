@@ -144,7 +144,6 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
   rate.sleep();
   goal_target.target_pose.header.frame_id = msg->header.frame_id;
   goal_target.target_pose.header.seq = msg->header.seq+targets.size();
-  send_marker(goal_target);
   rate.sleep();
   ROS_INFO("Storing target..");
   targets.push_back(goal_target);
