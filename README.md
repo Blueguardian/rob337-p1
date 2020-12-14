@@ -1,6 +1,6 @@
 # rob337-p1
 Project for B337 P1 ROB
-Congratiolations user of the Museum scanning robot!
+Congratulations user of the Museum scanning robot!
 It is currently able to
 
 Changelog:
