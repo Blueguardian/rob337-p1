@@ -335,34 +335,6 @@ void sortCoord(int startpos, int itera, double refx, double refy)
     if ((euclidianDist(targets[startpos].target_pose.pose.position.x, targets[startpos].target_pose.pose.position.y, refx, refy) > (euclidianDist(targets[i].target_pose.pose.position.x, targets[i].target_pose.pose.position.y, refx, refy)))) //Comparing the 2 points based on their euclidian distance to the reference point
     {
       std::swap(targets[startpos], targets[i]);                           //If the goal at the position of the iterator has a smaller euclidian distance to the reference point then swap it with the goal at the startpos
-      /* move_base_msgs::MoveBaseGoal temp;
-      temp.target_pose.pose.position.x = targets[startpos].target_pose.pose.position.x;
-      temp.target_pose.pose.position.y = targets[startpos].target_pose.pose.position.y;
-      temp.target_pose.pose.position.z = targets[startpos].target_pose.pose.position.z;
-      temp.target_pose.pose.orientation.x = targets[startpos].target_pose.pose.orientation.x;
-      temp.target_pose.pose.orientation.y = targets[startpos].target_pose.pose.orientation.y;
-      temp.target_pose.pose.orientation.z = targets[startpos].target_pose.pose.orientation.z;
-      temp.target_pose.pose.orientation.w = targets[startpos].target_pose.pose.orientation.w;
-      temp.target_pose.header.frame_id = targets[startpos].target_pose.header.frame_id;
-      temp.target_pose.header.stamp = targets[startpos].target_pose.header.stamp;
-      targets[startpos].target_pose.pose.position.x = targets[i].target_pose.pose.position.x;
-      targets[startpos].target_pose.pose.position.y = targets[i].target_pose.pose.position.y;
-      targets[startpos].target_pose.pose.position.z = targets[i].target_pose.pose.position.z;
-      targets[startpos].target_pose.pose.orientation.x = targets[i].target_pose.pose.orientation.x;
-      targets[startpos].target_pose.pose.orientation.y = targets[i].target_pose.pose.orientation.y;
-      targets[startpos].target_pose.pose.orientation.z = targets[i].target_pose.pose.orientation.z;
-      targets[startpos].target_pose.pose.orientation.w = targets[i].target_pose.pose.orientation.w;
-      targets[startpos].target_pose.header.frame_id = targets[i].target_pose.header.frame_id;
-      targets[startpos].target_pose.header.stamp = targets[i].target_pose.header.stamp;
-      targets[i].target_pose.pose.position.x = temp.target_pose.pose.position.x;
-      targets[i].target_pose.pose.position.y = temp.target_pose.pose.position.y;
-      targets[i].target_pose.pose.position.z = temp.target_pose.pose.position.z;
-      targets[i].target_pose.pose.orientation.x = temp.target_pose.pose.orientation.x;
-      targets[i].target_pose.pose.orientation.y = temp.target_pose.pose.orientation.y;
-      targets[i].target_pose.pose.orientation.z = temp.target_pose.pose.orientation.z;
-      targets[i].target_pose.pose.orientation.w = temp.target_pose.pose.orientation.w;
-      targets[i].target_pose.header.frame_id = temp.target_pose.header.frame_id;
-      targets[i].target_pose.header.stamp = temp.target_pose.header.stamp; */
     }
   }
 }
