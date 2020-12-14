@@ -14,33 +14,31 @@
 #include "tf/transform_datatypes.h"
 #include <vector>
 
-ros::NodeHandle *ptrnh;
-std::vector<move_base_msgs::MoveBaseGoal> targets;
-std::vector<double> angles_recieved;
-visualization_msgs::MarkerArray markers;
-int start = 0;
-int id = 1;
+ros::NodeHandle *ptrnh; //Creating a pointer for nodehandle to make it available in functions
+std::vector<move_base_msgs::MoveBaseGoal> targets; //A global vector to store the goals in
+std::vector<double> angles_recieved; //A global vector to store the angles from the goals in, for the exhibit scan
+int start = 0; // Variable for user input
 
+//Function prototypes (Prototyping)
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg);                                                      //Prints messeges containing the received coordinates                                                             //Prints messeges containing the received coordinates
 void goal_reached_cb(const actionlib::SimpleClientGoalState &state, const move_base_msgs::MoveBaseResult::ConstPtr &result); //Goal has been reached                                                             //Odometry callback function
 void send_goal(move_base_msgs::MoveBaseGoal goal_point, int i);                                                              //Send goal to move_base server
 void send_marker(move_base_msgs::MoveBaseGoal goal);
-double rob_facing_angle(double angle);
-void get_dif2Dgoal(move_base_msgs::MoveBaseGoal(*goal));
-void sortCoord(int startpos, int itera, double refx, double refy);
-double euclidianDist(double x1, double y1, double refx, double refy);
 void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter);
 void user_input_cb(const std_msgs::Char::ConstPtr &msg);
+void get_dif2Dgoal(move_base_msgs::MoveBaseGoal (*goal));
+void sortCoord(int startpos, int itera, double refx, double refy);
 double rob_facing_angle(double angle);
-double angle_according(double step, double n_step);
+double euclidianDist(double x1, double y1, double refx, double refy);
+double rob_facing_angle(double angle);
 
 int main(int argc, char **argv)
 {
   ros::init(argc, argv, "master"); //ros initialisation
-  ros::NodeHandle nh2;
-  ros::Rate loop(1);
-  ptrnh = &nh2;
+  ros::NodeHandle nh2; //Declaration of a nodehandle
+  ros::Rate loop(1); //Creating a rate at which the program sleeps when told to, here 1 second
+  ptrnh = &nh2; // Assigning the nodehandle pointer to the address of the newly declared nodehandle
 
   ros::Subscriber user_input = nh2.subscribe("new_exhibit", 1, userInterface_cb); // Subscribes to the user_input topic and when it receives a messege it runs the callback function
   ros::Subscriber input = nh2.subscribe("userinput", 10, user_input_cb);
@@ -97,8 +95,6 @@ int main(int argc, char **argv)
       angles_recieved.shrink_to_fit();
       targets.clear();
       targets.shrink_to_fit();
-      markers.markers.clear();
-      markers.markers.shrink_to_fit();
       i = 0;
       loop.sleep();
       start = 0;
@@ -319,17 +315,12 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
 
 void sortCoord(int startpos, int itera, double refx, double refy)
 {
-  //The function takes an array, a starting position, a number of iterations, since it ensures that the array does not get too big,
-  //and takes a set of coordinates for the point of reference, It then compares the array's coordinatesets by calling the euclidianDist() function
-  //to compare them by their euclidian distance. It then switches the sets if the former set is smaller than the latter.
-
-  //beginning of function
-
-  for (int i = startpos; i < itera; i++) //iterator for the first coordinateset
+  for (int i = startpos; i < itera; i++)
   {
     if ((euclidianDist(targets[startpos].target_pose.pose.position.x, targets[startpos].target_pose.pose.position.y, refx, refy) > (euclidianDist(targets[i].target_pose.pose.position.x, targets[i].target_pose.pose.position.y, refx, refy))))
     {
-      move_base_msgs::MoveBaseGoal temp;
+      std::swap(targets[startpos], targets[i]);
+     /* move_base_msgs::MoveBaseGoal temp;
       temp.target_pose.pose.position.x = targets[startpos].target_pose.pose.position.x;
       temp.target_pose.pose.position.y = targets[startpos].target_pose.pose.position.y;
       temp.target_pose.pose.position.z = targets[startpos].target_pose.pose.position.z;
@@ -356,7 +347,7 @@ void sortCoord(int startpos, int itera, double refx, double refy)
       targets[i].target_pose.pose.orientation.z = temp.target_pose.pose.orientation.z;
       targets[i].target_pose.pose.orientation.w = temp.target_pose.pose.orientation.w;
       targets[i].target_pose.header.frame_id = temp.target_pose.header.frame_id;
-      targets[i].target_pose.header.stamp = temp.target_pose.header.stamp;
+      targets[i].target_pose.header.stamp = temp.target_pose.header.stamp; */
     }
   }
 }
