@@ -1,8 +1,8 @@
 <launch>
-
    <node pkg="rob337-p1" type="main" name="main_rviz" output="screen"></node>
    ros::Duration(2.0).sleep();
-   <node pkg="rob337-p1" type="recorder" name="exhibit_recorder" output="screen"></node>
+   <node name="user_input" pkg="rob337-p1" type="user_input" output="screen" launch-prefix="xterm -e"/>
    ros::Duration(2.0).sleep();
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find rob337-p1)/config/museum.rviz"></node>
+   <node name="exhibit_room_vis" pkg="rviz" type="rviz" args="-d $(find rob337-p1)/config/museum.rviz"></node>
+
 </launch> 
