@@ -116,13 +116,14 @@ void _goal_reached_cb(const actionlib::SimpleClientGoalState &state, const move_
 void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
   move_base_msgs::MoveBaseGoal goal_target;
-  tf2::Quaternion rotation;
-  tf2::Vector3 temp_stor;
-  ros::Rate rate(5);
-
+  
   goal_target.target_pose.pose.position.x = msg->pose.position.x;
   goal_target.target_pose.pose.position.y = msg->pose.position.y;
   goal_target.target_pose.pose.orientation.z = msg->pose.position.z;
+
+  tf2::Quaternion rotation;
+  tf2::Vector3 temp_stor;
+  ros::Rate rate(5);
 
   rotation.setX(msg->pose.orientation.x);
   rotation.setY(msg->pose.orientation.y);
