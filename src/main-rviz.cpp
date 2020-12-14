@@ -51,7 +51,7 @@ int main(int argc, char **argv)
   int i = 0;
   while (ros::ok()) //while(!= ros::Shutdown(); or the user has Ctrl+C out of the program.)
   {
- 
+
     while (start == 't' || start == 'a' && i < targets.size())
     {
       if (i == 0)
@@ -63,9 +63,9 @@ int main(int argc, char **argv)
       }
       else
       {
-        for (int j = 0; j < targets.size()-i; j++)
+        for (int j = 0; j < targets.size() - i; j++)
         {
-          targets[i].target_pose.header.seq = targets[i].target_pose.header.seq-1;
+          targets[i].target_pose.header.seq = targets[i].target_pose.header.seq - 1;
         }
         sortCoord(i, targets.size(), targets[i - 1].target_pose.pose.position.x, targets[i - 1].target_pose.pose.position.y);
         ROS_INFO("Sending %d. goal", i + 1);
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
       ROS_INFO("Shutting down..");
       ros::shutdown();
     }
-    else if(start == 'r')
+    else if (start == 'r')
     {
       ROS_INFO("Clearing all data..");
       angles_recieved.clear();
@@ -112,13 +112,14 @@ void _goal_reached_cb(const actionlib::SimpleClientGoalState &state, const move_
 void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
   move_base_msgs::MoveBaseGoal goal_target;
-  tf2::Quaternion rotation;
-  tf2::Vector3 temp_stor;
-  ros::Rate rate(5);
-
+  
   goal_target.target_pose.pose.position.x = msg->pose.position.x;
   goal_target.target_pose.pose.position.y = msg->pose.position.y;
   goal_target.target_pose.pose.orientation.z = msg->pose.position.z;
+
+  tf2::Quaternion rotation;
+  tf2::Vector3 temp_stor;
+  ros::Rate rate(5);
 
   rotation.setX(msg->pose.orientation.x);
   rotation.setY(msg->pose.orientation.y);
@@ -127,9 +128,15 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
   goal_target.target_pose.pose.orientation.z = rotation.getAngle();
   temp_stor = rotation.getAxis();
+/*
+  double dif_x = 0.75 * cos(goal_target.target_pose.pose.orientation.z);
+  double dif_y = 0.75 * sin(goal_target.target_pose.pose.orientation.z);
+  goal_target.target_pose.pose.position.x = goal_target.target_pose.pose.position.x + dif_x;
+  goal_target.target_pose.pose.position.y = goal_target.target_pose.pose.position.y + dif_y;
+*/
   get_dif2Dgoal(&goal_target);
   rotation.setRotation(temp_stor, rob_facing_angle(rotation.getAngle()));
-  
+
   rate.sleep();
   angles_recieved.push_back(rob_facing_angle(rotation.getAngle()));
 
@@ -158,16 +165,14 @@ void send_goal(move_base_msgs::MoveBaseGoal goal_point, int i)
   rate.sleep();
   exhib_scan(goal_point, i);
 }
-void get_dif2Dgoal(move_base_msgs::MoveBaseGoal (*goal))
+void get_dif2Dgoal(move_base_msgs::MoveBaseGoal(*goal))
 {
-  double dif_x = 1.5*cos(goal->target_pose.pose.orientation.z);
-  double dif_y = 1.5*sin(goal->target_pose.pose.orientation.z);
+  double dif_x = 0.75 * cos(goal->target_pose.pose.orientation.z);
+  double dif_y = 0.75 * sin(goal->target_pose.pose.orientation.z);
 
-  move_base_msgs::MoveBaseGoal goal_target;
   goal->target_pose.pose.orientation.z = goal->target_pose.pose.orientation.z;
   goal->target_pose.pose.position.x = goal->target_pose.pose.position.x + dif_x;
   goal->target_pose.pose.position.y = goal->target_pose.pose.position.y + dif_y;
-
 }
 
 void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
@@ -256,8 +261,8 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
   }
   else //The robot is facing somewhere between - calculations for steps required!
   {
-    increment_x = step * cos(perp_line_angle);
-    increment_y = step * sin(perp_line_angle);
+    increment_x = step * cos(fabs(perp_line_angle));
+    increment_y = step * sin(fabs(perp_line_angle));
   }
 
   if (((fabs(angles_recieved.at(iter)) > 0) && (fabs(angles_recieved.at(iter)) < M_PI_2) && (skip == false)) || ((fabs(angles_recieved.at(iter)) > M_PI) && (fabs(angles_recieved.at(iter)) < (2 * M_PI * (3 / 4))) && (skip == false))) //Robot facing either first or third quadrant, as perp_line_angle is positive
@@ -267,6 +272,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
       ac1.sendGoalAndWait(goal);
+      sleep.sleep();
     }
     goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
     goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
@@ -274,6 +280,8 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
     { //We make the robot move 3 steps to the right, in which it faces the exhibits
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
+      ac1.sendGoalAndWait(goal);
+      sleep.sleep();
     }
   }
   else if (((fabs(angles_recieved.at(iter)) > M_PI_2) && (fabs(angles_recieved.at(iter)) < M_PI) && (skip == false)) || ((fabs(angles_recieved.at(iter)) > (2 * M_PI * (3 / 4))) && (fabs(angles_recieved.at(iter)) < (2 * M_PI)) && (skip == false))) //Either second or fourth quadrant, thus negative perp_line_angle
@@ -283,6 +291,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x + increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y + increment_y;
       ac1.sendGoalAndWait(goal);
+      sleep.sleep();
     }
     goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
     goal.target_pose.pose.position.y = tmp_location.target_pose.pose.position.y;
@@ -292,6 +301,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
       goal.target_pose.pose.position.x = goal.target_pose.pose.position.x - increment_x;
       goal.target_pose.pose.position.y = goal.target_pose.pose.position.y - increment_y;
       ac1.sendGoalAndWait(goal);
+      sleep.sleep();
     }
   }
   goal.target_pose.pose.position.x = tmp_location.target_pose.pose.position.x; //Goes back to original position
@@ -299,6 +309,7 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
   goal.target_pose.pose.orientation.z = tmp_location.target_pose.pose.orientation.z;
 
   ac1.sendGoalAndWait(goal);
+  sleep.sleep();
   ROS_INFO("Exhibit scanned!..");
 }
 
@@ -379,6 +390,4 @@ double rob_facing_angle(double angle)
     oppositeangle = angle - M_PI;
   }
   return oppositeangle;
-
 }
-

@@ -1,7 +1,7 @@
 #include <ros/ros.h>
 #include <std_msgs/Char.h>
 
-void terminate_cb(const std_msgs::Char::ConstPtr &msg);
+//void terminate_cb(const std_msgs::Char::ConstPtr &msg);
 
 int main(int argc, char **argv)
 {
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
         begin.data = 0;
         confirm = 0;
       }
-      else if(begin.data == 'a')
+      else if (begin.data == 'a')
       {
         ROS_INFO("You sent the command to abort current goals");
         user_input.publish(begin);
