@@ -15,7 +15,7 @@
 ros::NodeHandle *ptrnh;                            //Creating a pointer for nodehandle to make it available in functions
 std::vector<move_base_msgs::MoveBaseGoal> targets; //A global vector to store the goals in
 std::vector<double> angles_recieved;               //A global vector to store the angles from the goals in, for the exhibit scan
-int start = 0;                                     // Variable for user input
+int start = 0;                                     //Declaring a variable for user input
 
 //Function prototypes (Prototyping)
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
@@ -89,10 +89,10 @@ int main(int argc, char **argv)                                           //Main
     else if (start == 'r')                                                //If the user inputs 'r'
     {
       ROS_INFO("Clearing all data..");                                    //Send them a message of what is happening
-      angles_recieved.clear();                                            //Clear angles to make space for new ones
-      angles_recieved.shrink_to_fit();                                    //Reset the size, to make sure no data is left behind
-      targets.clear();                                                    //Clear goals to make space for new ones
-      targets.shrink_to_fit();                                            //Reset the size to make sure no data is left behind
+      angles_recieved.clear();                                            //Clear angles vector to make space for new ones
+      angles_recieved.shrink_to_fit();                                    //Reset the size of the vector, to make sure no data is left behind
+      targets.clear();                                                    //Clear goals vector to make space for new ones
+      targets.shrink_to_fit();                                            //Reset the size of the vector to make sure no data is left behind
       i = 0;                                                              //Reset goal iterator
       loop.sleep();                                                       //Wait 1 second before continuing
       start = 0;                                                          //Reset user_input variable for continuing the code
@@ -118,34 +118,34 @@ void userInterface_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 
   move_base_msgs::MoveBaseGoal goal_target;                               //Create an object of type move_base_msgs::MoveBaseGoal to store the point in
 
-  goal_target.target_pose.pose.position.x = msg->pose.position.x;         //Store the x coordinate in the container
-  goal_target.target_pose.pose.position.y = msg->pose.position.y;         //Store the y coordinate in the container
-  goal_target.target_pose.pose.position.z = msg->pose.position.z;         //Store the z coordinate in the container
+  goal_target.target_pose.pose.position.x = msg->pose.position.x;         //Assign the x coordinate element in the container the corresponding value in the message
+  goal_target.target_pose.pose.position.y = msg->pose.position.y;         //Assign the y coordinate element in the container the corresponding value in the message
+  goal_target.target_pose.pose.position.z = msg->pose.position.z;         //Assign the z coordinate element in the container the corresponding value in the message
 
   tf2::Quaternion rotation;                                               //Create an object of type tf2::Quaternion for a container used for the rotation calculations
   tf2::Vector3 temp_stor;                                                 //Create an object of type tf2::Vector3 for a container used for rotation calculations
-  ros::Rate rate(5);                                                      //Create a rate at which the program must sleep before continuing (Here 0.2 seconds)
+  ros::Rate rate(5);                                                      //Create a rate at which the program must sleep before continuing (Here 0.2 seconds) and assign it to an object called rate
 
-  rotation.setX(msg->pose.orientation.x);                                 //Store the rotation in the rotation container
-  rotation.setY(msg->pose.orientation.y);                                 //Store the rotation in the rotation container
-  rotation.setZ(msg->pose.orientation.z);                                 //Store the rotation in the rotation container
-  rotation.setW(msg->pose.orientation.w);                                 //Store the rotation in the rotation container
+  rotation.setX(msg->pose.orientation.x);                                 //Assign the rotation element x in the rotation container to the corresponding value in the message
+  rotation.setY(msg->pose.orientation.y);                                 //Assign the rotation element y in the rotation container to the corresponding value in the message
+  rotation.setZ(msg->pose.orientation.z);                                 //Assign the rotation element z in the rotation container to the corresponding value in the message
+  rotation.setW(msg->pose.orientation.w);                                 //Assign the rotation element w in the rotation container to the corresponding value in the message
 
-  goal_target.target_pose.pose.orientation.z = rotation.getAngle();       //Store the angle as part of the goal temporarily for calculations
-  temp_stor = rotation.getAxis();                                         //Storing the rotational axis for calculations purposes
+  goal_target.target_pose.pose.orientation.z = rotation.getAngle();       //Assign the angle from the message to the goal orientation z element temporarily for calculations
+  temp_stor = rotation.getAxis();                                         //Assign the rotational axis the rotation axis from the message for calculations purposes
   get_dif2Dgoal(&goal_target);                                            //Send the current goal to be processed in the first function
-  rotation.setRotation(temp_stor, rob_facing_angle(rotation.getAngle())); //Store the rotation in the container again using the axis and opposite rotation from the function rob_facing_angle
+  rotation.setRotation(temp_stor, rob_facing_angle(rotation.getAngle())); //Assign the rotation in the container again using the axis and opposite rotation from the function rob_facing_angle
 
   rate.sleep();                                                           //Wait 0.2 seconds before continuing
   angles_recieved.push_back(rob_facing_angle(rotation.getAngle()));       //Store the resulting angle in the global vector
 
-  goal_target.target_pose.pose.orientation.z = rotation.getZ();           //Enter the final data into the goal variable (Rotation)
-  goal_target.target_pose.pose.orientation.w = rotation.getW();           //Enter the final data into the goal variable (Rotation)
-  goal_target.target_pose.pose.orientation.x = rotation.getX();           //Enter the final data into the goal variable (Rotation)
-  goal_target.target_pose.pose.orientation.y = rotation.getY();           //Enter the final data into the goal variable (Rotation)
+  goal_target.target_pose.pose.orientation.z = rotation.getZ();           //Assign the final data into the goal object (Rotation)
+  goal_target.target_pose.pose.orientation.w = rotation.getW();           //Assign the final data into the goal object (Rotation)
+  goal_target.target_pose.pose.orientation.x = rotation.getX();           //Assign the final data into the goal object (Rotation)
+  goal_target.target_pose.pose.orientation.y = rotation.getY();           //Assign the final data into the goal object (Rotation)
   rate.sleep();                                                           //Wait 0.2 seconds before continuing
   goal_target.target_pose.header.frame_id = msg->header.frame_id;         //Assign the frame_id to the goal, using the entered point's frame_id
-  goal_target.target_pose.header.seq = msg->header.seq + targets.size();  //Enter the correct sequence into the goal
+  goal_target.target_pose.header.seq = msg->header.seq + targets.size();  //Assign the correct sequence to the goal object
   rate.sleep();                                                           //Wait 0.2 seconds before continuing
   ROS_INFO("Storing target..");                                           //Print a fitting message for the user
   targets.push_back(goal_target);                                         //Store the target goal in the global vector for goals
@@ -159,14 +159,14 @@ void send_goal(move_base_msgs::MoveBaseGoal goal_point, int i)
   //Beginning of function
 
   MoveBaseClient ac("move_base", true);                                   //Define an action client to send goals to, and tell it that the communication between the program and the robot has to remain open
-  ros::Rate rate(5);                                                      //Define a rate at which the program must sleep before continuing
+  ros::Rate rate(5);                                                      //Define a rate at which the program must sleep before continuing assigning it to an object named rate
   ac.sendGoal(goal_point, _goal_reached_cb);                              //Send the goal to the robot, and call the _goal_reached_cb when done
   rate.sleep();                                                           //Wait 0.2 seconds before continuing
   ROS_INFO("Sending goal..");                                             //Print a fitting messege for the user to show the status of the program                                                           
   ac.waitForResult();                                                     //Wait for the robot to finish the current goal
   ROS_INFO("Performing scan of exhibition...");                           //Print a fitting message to the user of the programs status
   rate.sleep();                                                           //Wait 0.2 seconds before continuing
-  exhib_scan(goal_point, i);                                              //Start up the exhibit scan function before recieving a new goal
+  exhib_scan(goal_point, i);                                              //Call the exhibit scan function before recieving a new goal
 }
 
 void get_dif2Dgoal(move_base_msgs::MoveBaseGoal(*goal))
@@ -197,8 +197,8 @@ void exhib_scan(move_base_msgs::MoveBaseGoal goal, int iter)
   //We define how many meters the robot must move each step while re-locating
   double step = 0.15;
   double perp_line_angle = 0;                                             //Calculation of perpendicular angle, used in increment
-  double increment_x = 0;                                                 //Declaring a variable for the increments in x
-  double increment_y = 0;                                                 //Declaring a variable for the increments in y  
+  double increment_x = 0;                                                 //Declaring a variable for the increments in x and assigning it the value 0;
+  double increment_y = 0;                                                 //Declaring a variable for the increments in y and assigning it the value 0;
   bool skip = false;                                                      //Declaring a varible for skipping and assigning the value 'false* to it
   MoveBaseClient ac1("move_base", true);                                  //Define an action client to send goals to, and tell it that the communication between the program and the robot has to remain open
 
@@ -374,17 +374,20 @@ double euclidianDist(double x1, double y1, double refx, double refy)
 
   //beginning of function
 
-  double distx = pow(x1 - refx, 2);                                       //Reference distance calculation
-  double disty = pow(y1 - refy, 2);                                       //Input distance calculation
-  double dist = sqrt(distx + disty);                                      //calculation of distance between reference point and input point
-  return dist;
+  double distx = pow(x1 - refx, 2);                                       //Declaring a variable of type double and assigning it the resulting value
+  double disty = pow(y1 - refy, 2);                                       //Declaring a variable of type double and assigning it the resulting value
+  double dist = sqrt(distx + disty);                                      //Declaring a variable of type double and assigning it the sum of the earlier varibles
+  return dist;                                                            //Returning the last variable as a result
 }
 
 void user_input_cb(const std_msgs::Char::ConstPtr &msg)
 {
   //The user_input_cb is a callback function for when the user inputs a command for the main program
+
+  //Beginning of function
+
   ROS_INFO("Command recieved: %d", msg->data); //Print a fitting message for the user.
-  start = msg->data; //Assign the info in the message to the global variable for use.
+  start = msg->data; //Assign the info in the message to the global variable for use in the main loop
 }
 
 double rob_facing_angle(double angle)
@@ -394,16 +397,16 @@ double rob_facing_angle(double angle)
 
   //beginning of the function
 
-  angle = fabs(angle);
-  double oppositeangle = 0;
+  angle = fabs(angle);                                                    //Reassigning the input variable to the absolute of the value it contains
+  double oppositeangle = 0;                                               //Declaring a variable of type double and assigning it the value 0;
 
   if (angle >= 0 && angle <= M_PI)                                        //If this is true, the angle of the exhibitions would be added to Pi, to face it with a positive angle
   {
-    oppositeangle = angle + M_PI;
+    oppositeangle = angle + M_PI;                                         //Assigning the oppositeangle value the sum of the input variable and PI
   }
   else if (angle > M_PI && angle < (2 * M_PI))                            //If this is true, the angle of the exhibitions would be added to Pi, to face it with a positive angle
   {
-    oppositeangle = angle - M_PI;
+    oppositeangle = angle - M_PI;                                         //Assigning the oppositeangle value the sum of the input variable and -PI
   }
   return oppositeangle;
 }

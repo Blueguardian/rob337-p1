@@ -1,3 +1,4 @@
+//Importing necessary libraries
 #include <ros/ros.h>
 #include <std_msgs/Char.h>
 
@@ -6,6 +7,7 @@ int main(int argc, char **argv)
                                                                             //Main function
   ros::init(argc, argv, "user_input");                                      //Initializing ros
   ros::NodeHandle n;                                                        //Creating a nodehandle for the node
+  ROS_INFO("Welcome user! \n The following commands are viable: \n While robot not running: \n \n Enter 'q' for quitting the program \n Enter 'r' for resetting the inserted data \n Enter 't' for starting the robot with the inserted data \n \n When the robot is running: \n Enter 'a' for aborting current setup \n"); //Tell the user which options they have
 
   ros::Publisher user_input = n.advertise<std_msgs::Char>("userinput", 1);  //Creating a publisher for the user_input which publishes to the "userinput"-topic
 
@@ -65,7 +67,7 @@ int main(int argc, char **argv)
     }
     else                                                                    //If the user entered anything other than the above characters
     {
-      ROS_WARN("Command not recognised");                                   //Print a message telling them to 
+      ROS_WARN("Command not recognised");                                   //Print a message telling them that the command was not recognized
     }
   }
   return 0;
