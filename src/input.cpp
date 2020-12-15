@@ -68,6 +68,7 @@ int main(int argc, char **argv)
     else                                                                    //If the user entered anything other than the above characters
     {
       ROS_WARN("Command not recognised");                                   //Print a message telling them that the command was not recognized
+      begin.data = 0;                                                         //Reset the user_input  
     }
   }
   return 0;
